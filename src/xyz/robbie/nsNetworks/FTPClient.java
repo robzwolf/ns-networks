@@ -11,7 +11,7 @@ public class FTPClient {
 
         try {
             // Get registry
-            Registry registry = LocateRegistry.getRegistry("localhost", 10000);
+            Registry registry = LocateRegistry.getRegistry("localhost", 1099);
 
             // Lookup the remote object "server_hello" from registry and create a stub for it
             FTPServerInterface stub = (FTPServerInterface) registry.lookup("server_hello");

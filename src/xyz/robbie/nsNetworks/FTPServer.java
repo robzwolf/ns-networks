@@ -8,8 +8,6 @@ import java.rmi.server.UnicastRemoteObject;
 
 public class FTPServer implements FTPServerInterface {
 
-
-
     public String sayHello() {
         return "Successful remote invocation!";
     }
@@ -23,7 +21,7 @@ public class FTPServer implements FTPServerInterface {
             FTPServerInterface stub = (FTPServerInterface) UnicastRemoteObject.exportObject(server, 0);
 
             // Get registry
-            Registry registry = LocateRegistry.getRegistry("localhost", 10000);
+            Registry registry = LocateRegistry.getRegistry("", 1099);
 
             // Bind the remote object's stub in the registry
             registry.bind("server_hello", server);
@@ -31,7 +29,7 @@ public class FTPServer implements FTPServerInterface {
             // Write ready message to console
             System.out.println("Server ready");
         } catch (RemoteException | AlreadyBoundException e) {
-            System.out.println("Server remote exception " + e);
+            System.out.println("Server remote exception:: " + e);
             e.printStackTrace();
         }
     }
