@@ -6,6 +6,10 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Scanner;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.io.IOException;
 
 public class FTPClient {
     
@@ -76,6 +80,15 @@ public class FTPClient {
             ePrint("Error: file '" + localFileName + "' not found.");
             return;
         } else {
+            try {
+                byte[] uploadBytes = Files.readAllBytes(toUpload.toPath());
+                for (byte b : uploadBytes) {
+                    vPrint(b);
+                }
+            } catch (IOException e) {
+                vPrint(e);
+                e.printStackTrace();
+            }
             
         }
     }
