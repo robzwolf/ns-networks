@@ -11,13 +11,20 @@ public class FTPClient {
     
     public static void main(String[] args) {
         
-        System.out.println("Called main method");
+        System.out.println("Starting FTPClient application...");
         
-        String host = (args.length < 1) ? null : args[0];
+        // String host = (args.length < 1) ? null : args[0];
+        
+        int port = (args.length < 1) ? 1099 : Integer.parseInt(args[0]);
+        
+        // Print out program arguments
+        for (int i=0; i<args.length; i++) {
+            System.out.println("Arg no. " + i + ": " + args[i]);
+        }
 
         try {
             // Get registry
-            Registry registry = LocateRegistry.getRegistry("mira1.dur.ac.uk", 1099);
+            Registry registry = LocateRegistry.getRegistry("mira1.dur.ac.uk", port);
             System.out.println("Got registry mira1");
 
             // Lookup the remote object "server_hello" from registry and create a stub for it

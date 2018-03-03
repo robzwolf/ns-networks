@@ -19,6 +19,15 @@ public class FTPServer implements FTPServerInterface {
     }
 
     public static void main(String[] args) {
+        System.out.println("Starting FTPServer application...");
+        
+        // Print out program arguments
+        for (int i=0; i<args.length; i++) {
+            System.out.println("Arg no. " + i + ": " + args[i]);
+        }
+        
+        int port = (args.length < 1) ? 1099 : Integer.parseInt(args[0]);
+        
         try {
             // Create server object
             FTPServer server = new FTPServer();
@@ -26,9 +35,11 @@ public class FTPServer implements FTPServerInterface {
 
             // Create remote object stub from server object
             FTPServerInterface stub = (FTPServerInterface) UnicastRemoteObject.exportObject(server, 0);
+            System.out.println("Created stub");
 
             // Get registry
-            Registry registry = LocateRegistry.getRegistry("mira1.dur.ac.uk", 1099);
+            Registry registry = LocateRegistry.getRegistry("mira1.dur.ac.uk", port);
+            System.out.println("Got registry mira1");
 
             // Bind the remote object's stub in the registry
             registry.bind("server_hello", server);
