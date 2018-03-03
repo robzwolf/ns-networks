@@ -1,4 +1,4 @@
-package xyz.robbie.nsNetworks;
+package xyz.robbie.nsnetworks;
 
 // package example.hello;
 
