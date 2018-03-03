@@ -1,5 +1,7 @@
 //package xyz.robbie.nsNetworks;
 
+package example.hello;
+
 import java.rmi.AlreadyBoundException;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
@@ -26,7 +28,7 @@ public class FTPServer implements FTPServerInterface {
             FTPServerInterface stub = (FTPServerInterface) UnicastRemoteObject.exportObject(server, 0);
 
             // Get registry
-            Registry registry = LocateRegistry.getRegistry("", 1099);
+            Registry registry = LocateRegistry.getRegistry("mira1.dur.ac.uk", 1099);
 
             // Bind the remote object's stub in the registry
             registry.bind("server_hello", server);
