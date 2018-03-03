@@ -1,6 +1,6 @@
-//package xyz.robbie.nsNetworks;
+package xyz.robbie.nsNetworks;
 
-package example.hello;
+// package example.hello;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

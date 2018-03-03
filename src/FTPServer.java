@@ -1,6 +1,6 @@
-//package xyz.robbie.nsNetworks;
+package xyz.robbie.nsNetworks;
 
-package example.hello;
+// package example.hello;
 
 import java.rmi.AlreadyBoundException;
 import java.rmi.registry.Registry;
