@@ -1,17 +1,23 @@
 package xyz.robbie.nsnetworks;
 
-// package example.hello;
-
 import java.rmi.AlreadyBoundException;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.io.File;
+import java.io.IOException;
 
 public class FTPServer implements FTPServerInterface {
     
-    static boolean VERBOSE_PRINT;
-    static int PORT;
+    private static final String FILE_STORAGE_PATH_PREFIX = "storedFiles/";
+    
+    // Fields
+    private static boolean VERBOSE_PRINT;
+    private static int PORT;
 
     public FTPServer() {
         System.out.println("FTPServer() constructor was called");
@@ -32,6 +38,25 @@ public class FTPServer implements FTPServerInterface {
 
     public String sayHello() {
         return "Successfully connected to server!";
+    }
+    
+    public void uploadFile(String fileName, byte[] fileContents) {
+        // Write `fileContents` to `fileName`
+        ePrint("Received upload request: " + fileName);
+        for (byte b : fileContents) {
+            vPrint(b);
+        }
+        try {
+            File file = new File(FILE_STORAGE_PATH_PREFIX + fileName);
+            file.getParentFile().mkdirs(); 
+            file.createNewFile();
+            Path path = Paths.get(FILE_STORAGE_PATH_PREFIX + fileName);
+            Files.write(path, fileContents);
+            vPrint("Wrote fileContents to " + FILE_STORAGE_PATH_PREFIX + fileName);
+        } catch (IOException e) {
+            vPrint(e);
+        }
+        
     }
     
     public static void main(String[] args) {
@@ -110,7 +135,7 @@ public class FTPServer implements FTPServerInterface {
         
         try {
             // Create server object
-            FTPServer server = new FTPServer();
+            FTPServerInterface server = new FTPServer();
             vPrint("Successfully made new FTPServer");
 
             // Create remote object stub from server object

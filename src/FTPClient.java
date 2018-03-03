@@ -85,6 +85,7 @@ public class FTPClient {
                 for (byte b : uploadBytes) {
                     vPrint(b);
                 }
+                SERVER_STUB.uploadFile(localFileName, uploadBytes);
             } catch (IOException e) {
                 vPrint(e);
                 e.printStackTrace();
