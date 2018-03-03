@@ -4,12 +4,21 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Scanner;
+import java.io.File;
 
 public class FTPClient {
     
-    static boolean VERBOSE_PRINT;
-    static int PORT;
-    static FTPServerInterface SERVER_STUB;
+    // Constants
+    private static final String HOST = "mira1.dur.ac.uk";
+    private static final String STUB_NAME = "xyz_robbie_nsnetworks_ftp_server";
+    private static final String HELLO_CHECK = "Successfully connected to server!";
+    
+    // Fields
+    private static boolean VERBOSE_PRINT;
+    private static int PORT;
+    private static FTPServerInterface SERVER_STUB;
+    
     
     // Only prints if VERBOSE_PRINT is true
     private static boolean vPrint(Object objToPrint) {
@@ -24,25 +33,68 @@ public class FTPClient {
         System.out.println(objToPrint);
     }
     
+    private static boolean isConnected() {
+        return SERVER_STUB != null;
+    }
+    
     private static void connectToServer() {
+        ePrint("Connecting to server " + HOST + "...");
         try {
             // Get registry
-            Registry registry = LocateRegistry.getRegistry("mira1.dur.ac.uk", PORT);
-            vPrint("Got registry mira1");
+            Registry registry = LocateRegistry.getRegistry(HOST, PORT);
+            vPrint("Got registry: " + HOST);
 
             // Lookup the remote object "server_hello" from registry and create a stub for it
-            FTPServerInterface stub = (FTPServerInterface) registry.lookup("xyz_robbie_nsnetworks_ftp_server");
-            SERVER_STUB = stub;
-            vPrint("Got stub server_hello");
+            // FTPServerInterface stub = (FTPServerInterface) registry.lookup(STUB_NAME);
+            SERVER_STUB = (FTPServerInterface) registry.lookup(STUB_NAME);
+            vPrint("Got stub: " + STUB_NAME);
 
             // Invoke a remote method
-            String response = stub.sayHello();
+            String response = SERVER_STUB.sayHello();
             vPrint("response: " + response);
+            
+            if (!response.equals(HELLO_CHECK)) {
+                throw new FTPServerClientHelloMismatchException(HELLO_CHECK, response);
+            }
+            
+            vPrint("Currently connected: " + isConnected());
 
         } catch (RemoteException | NotBoundException e) {
             ePrint("Client exception: " + e);
             e.printStackTrace();
+        } catch (FTPServerClientHelloMismatchException e) {
+            ePrint("Connection to server failed.");
+            vPrint("REASON = " + e);
         }
+    }
+    
+    private static void uploadFile(String localFileName) {
+        // Do the file upload
+        File toUpload = new File(localFileName);
+        vPrint("File '" + localFileName + "' exists() = " + toUpload.exists());
+        if (!toUpload.exists()) {
+            ePrint("Error: file '" + localFileName + "' not found.");
+            return;
+        } else {
+            
+        }
+    }
+    
+    private static void listFiles() {
+        // Get list of files from server and list them
+    }
+    
+    private static void downloadFile(String fileName) {
+        // Download a file from the server and save it to fileName (locally)
+    }
+    
+    private static void deleteRemoteFile(String fileName) {
+        // Delete the remote file fileName
+    }
+    
+    private static void cleanupAndQuit() {
+        // Do any necessary clean-ups and then quit the application
+        System.exit(0);
     }
     
     public static void main(String[] args) {
@@ -121,7 +173,60 @@ public class FTPClient {
         for (int i=0; i<args.length; i++) {
             vPrint("Arg no. " + i + ": " + args[i]);
         }
-
-        connectToServer();
+        
+        vPrint("Currently connected: " + isConnected());
+        
+        
+        
+        // Do the menu thing
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            ePrint("");
+            ePrint("## FTP Client Menu ##");
+            ePrint("  CONN - connect to server");
+            ePrint("  UPLD - upload a file to the server");
+            ePrint("  LIST - list the files on the server");
+            ePrint("  DWLD - download a file from the server");
+            ePrint("  DELF - delete a file from the server");
+            ePrint("  QUIT - exit FTP client");
+            ePrint("");
+            ePrint("Enter a command:");
+            String command = scanner.next().toUpperCase();
+            ePrint("");
+            vPrint("Entered command (in caps) was: " + command);
+            
+            switch (command) {
+                case "CONN": {
+                    connectToServer();
+                    break;
+                }
+                case "UPLD": {
+                    ePrint("Enter the name of the file to upload:");
+                    String fileName = scanner.next();
+                    uploadFile(fileName);
+                    break;
+                }
+                case "LIST": {
+                    listFiles();
+                    break;
+                }
+                case "DWLD": {
+                    downloadFile("");
+                    break;
+                }
+                case "DELF": {
+                    deleteRemoteFile("");
+                    break;
+                }
+                case "QUIT": {
+                    cleanupAndQuit();
+                    break;
+                }
+                default: {
+                    ePrint("\nUnrecognised command: " + command);
+                    break;
+                }
+            }
+        }
     }
 }

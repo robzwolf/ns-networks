@@ -129,7 +129,7 @@ public class FTPServer implements FTPServerInterface {
             ePrint("# Server ready! #");
             ePrint("#################\n");
         } catch (RemoteException | AlreadyBoundException e) {
-            ePrint("Server remote exception:: " + e);
+            ePrint("Server remote exception: " + e);
             e.printStackTrace();
         }
     }
