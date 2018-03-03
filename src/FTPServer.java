@@ -45,7 +45,9 @@ public class FTPServer implements FTPServerInterface {
             registry.bind("server_hello", server);
 
             // Write ready message to console
-            System.out.println("Server ready");
+            System.out.println("\n#################");
+            System.out.println("# Server ready! #");
+            System.out.println("#################\n");
         } catch (RemoteException | AlreadyBoundException e) {
             System.out.println("Server remote exception:: " + e);
             e.printStackTrace();
