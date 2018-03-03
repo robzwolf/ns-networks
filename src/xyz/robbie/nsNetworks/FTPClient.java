@@ -1,4 +1,4 @@
-package xyz.robbie.nsNetworks;
+//package xyz.robbie.nsNetworks;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;

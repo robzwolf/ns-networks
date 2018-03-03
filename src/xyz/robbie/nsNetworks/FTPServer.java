@@ -1,4 +1,4 @@
-package xyz.robbie.nsNetworks;
+//package xyz.robbie.nsNetworks;
 
 import java.rmi.AlreadyBoundException;
 import java.rmi.registry.Registry;
@@ -8,6 +8,10 @@ import java.rmi.server.UnicastRemoteObject;
 
 public class FTPServer implements FTPServerInterface {
 
+    public FTPServer() {
+        System.out.println("FTPServer() constructor was called");
+    }
+
     public String sayHello() {
         return "Successful remote invocation!";
     }
@@ -16,6 +20,7 @@ public class FTPServer implements FTPServerInterface {
         try {
             // Create server object
             FTPServer server = new FTPServer();
+            System.out.println("Successfully made new FTPServer");
 
             // Create remote object stub from server object
             FTPServerInterface stub = (FTPServerInterface) UnicastRemoteObject.exportObject(server, 0);
