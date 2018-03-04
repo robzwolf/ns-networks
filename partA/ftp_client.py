@@ -3,6 +3,7 @@ import fileinput
 import socket
 import sys
 import argparse
+import short_int
 
 # Constants
 DEFAULT_PORT = 1337
@@ -28,7 +29,7 @@ class FTPClient:
 
     def make_connection(self):
 
-        response = self.send_data(HELLO_CHECK)
+        response = self.send_data("HELO", HELLO_CHECK)
         if response != HELLO_CHECK:
             vprint("HELLO_CHECK mismatch!")
 
@@ -55,16 +56,34 @@ class FTPClient:
         # finally:
         #     self.close_connection()
 
-    def send_data(self, data):
+    def send_data(self, command, data_1=None, data_2=None):
         # Connect the socket to the port where the server is listening
         server_address = ("", PORT)
         print("Connecting to {} port {}".format(*self.sock.getsockname(), PORT))
         self.sock.connect(server_address)
 
         try:
-            # Send data
-            message = bytes(data)
-            print("Sending:\n{!r}".format(message))
+            message = b""
+            # Send command
+            print("Sending:\n{!r}".format(command))
+            # self.sock.sendall(bytes(command))
+            message += bytes(command, "utf-8")
+
+            if data_1 is not None:
+                vprint("len(data_1) = {}".format(len(data_1)))
+                vprint("short_int.encode(len(data_1)) = {}".format(short_int.encode(len(data_1))))
+                message += bytes(short_int.encode(len(data_1)), "utf-8")
+                message += data_1
+                vprint("message = {}".format(message))
+
+            if data_2 is not None:
+                vprint("len(data_2) = {}".format(len(data_2)))
+                vprint("short_int.encode(len(data_2)) = {}".format(short_int.encode(len(data_2))))
+                message += bytes(short_int.encode(len(data_2)), "utf-8")
+                message += data_2
+                vprint("message = {}".format(message))
+
+            # Send the message
             self.sock.sendall(message)
 
             response = b""

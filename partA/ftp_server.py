@@ -3,6 +3,7 @@
 import socket
 import sys
 import argparse
+import short_int
 
 # Constants
 DEFAULT_PORT = 1337
@@ -72,7 +73,9 @@ class FTPServer:
                     break
                 else:
                     # Receive DATA_1_LENGTH
-                    data_1_length = int(self.connection.recv(2))
+                    data_1_length_raw = self.connection.recv(2)
+                    vprint("data_1_length_raw = {}".format(data_1_length_raw))
+                    data_1_length = short_int.decode(data_1_length_raw.decode("utf-8"))
                     vprint("data_1_length = {}".format(data_1_length))
 
 
