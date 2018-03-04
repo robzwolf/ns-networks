@@ -13,17 +13,17 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 
 public class FTPServer implements FTPServerInterface {
-    
+
     private static final String UPLOADED_FILES_STORAGE_PATH_PREFIX = "uploadedFiles/";
-    
+
     // Fields
     private static boolean VERBOSE_PRINT;
     private static int PORT;
 
     public FTPServer() {
-        ePrint("FTPServer() constructor was called");
+        vPrint("FTPServer() constructor was called");
     }
-    
+
     // Only prints if VERBOSE_PRINT is true
     private static boolean vPrint(Object objToPrint) {
         if (VERBOSE_PRINT) {
@@ -31,7 +31,7 @@ public class FTPServer implements FTPServerInterface {
         }
         return VERBOSE_PRINT;
     }
-    
+
     // Easy print (normal print function wrapper)
     private static void ePrint(Object objToPrint) {
         System.out.println(objToPrint);
@@ -40,7 +40,7 @@ public class FTPServer implements FTPServerInterface {
     public String sayHello() {
         return "Successfully connected to server!";
     }
-    
+
     public void uploadFile(String fileName, byte[] fileContents) {
         // Write `fileContents` to `fileName`
         ePrint("Received upload request: " + fileName);
@@ -50,7 +50,7 @@ public class FTPServer implements FTPServerInterface {
         }
         try {
             File file = new File(UPLOADED_FILES_STORAGE_PATH_PREFIX + fileName);
-            file.getParentFile().mkdirs(); 
+            file.getParentFile().mkdirs();
             file.createNewFile();
             Path path = Paths.get(UPLOADED_FILES_STORAGE_PATH_PREFIX + fileName);
             Files.write(path, fileContents);
@@ -60,7 +60,7 @@ public class FTPServer implements FTPServerInterface {
             vPrint(e);
         }
     }
-    
+
     public byte[] downloadFile(String localFileName) throws FileNotFoundException {
         // Do the file upload
         File toDownload = new File(localFileName);
@@ -84,11 +84,11 @@ public class FTPServer implements FTPServerInterface {
         }
         return null;
     }
-    
+
     public static void main(String[] args) {
         ePrint("Starting FTPServer application...");
         ePrint("Press Ctrl-C at any point to exit the application.");
-        
+
         /* Handle arguments
          * Use `-v` to enable verbose print
          * Use `-p <port>` (e.g. `-p 50000`) to specify a port, otherwise
@@ -154,12 +154,12 @@ public class FTPServer implements FTPServerInterface {
             ePrint("Too many arguments.");
             System.exit(0);
         }
-        
+
         // Print out program arguments
         for (int i=0; i<args.length; i++) {
             vPrint("Arg no. " + i + ": " + args[i]);
         }
-        
+
         try {
             // Create server object
             FTPServerInterface server = new FTPServer();
