@@ -6,7 +6,7 @@ import argparse
 
 # Constants
 DEFAULT_PORT = 1337
-HELLO_CHECK = "Successfully connected to server!"
+HELLO_CHECK = b"Successfully connected to server!"
 
 # Global variables
 VERBOSE_PRINT = False
@@ -29,6 +29,9 @@ class FTPServer:
 
         vprint("Made socket")
 
+        self.connection = None
+        vprint("Defined self.connection")
+
     def say_hello(self):
         return HELLO_CHECK
 
@@ -47,17 +50,17 @@ class FTPServer:
             print("Waiting for a connection...")
             self.connection, client_address = self.sock.accept()
             try:
-                print("Connection from", client_address)
+                vprint("Connection from {}".format(client_address))
 
                 # Receive the data in small chunks and retransmit it
                 while True:
                     data = self.connection.recv(16)
-                    print("Received {!r}".format(data))
+                    vprint("Received {!r}".format(data))
                     if data:
-                        print("Sending data back to the client")
+                        vprint("Sending data back to the client")
                         self.connection.sendall(data)
                     else:
-                        print("No data from", client_address)
+                        vprint("No data from {}".format(client_address))
                         break
 
             finally:
