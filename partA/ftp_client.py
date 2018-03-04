@@ -29,7 +29,7 @@ class FTPClient:
 
     def make_connection(self):
 
-        response = self.send_data("HELO", HELLO_CHECK)
+        response = self.send_data("HELO", HELLO_CHECK, b"This is a random message... :-)")
         if response != HELLO_CHECK:
             vprint("HELLO_CHECK mismatch!")
 

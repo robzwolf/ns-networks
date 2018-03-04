@@ -11,12 +11,7 @@ def encode(number):
     second_bit_string = bin(number)[2:][-8:]
     first_int = int(first_bit_string, base=2) if first_bit_string != "" else 0
     second_int = int(second_bit_string, base=2) if second_bit_string != "" else 0
-    # print(first_bit_string)
-    # print(second_bit_string)
-    # print(first_int)
-    # print(second_int)
     return chr(first_int) + chr(second_int)
-    # return chr(int(bin(number)[2:][:-8], base=2)) + chr(int(bin(number)[2:][-8:], base=2))
 
 
 def decode(string):

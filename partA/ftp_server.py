@@ -9,8 +9,8 @@ import short_int
 DEFAULT_PORT = 1337
 HELLO_CHECK = b"Successfully connected to server!"
 VALID_COMMANDS = ["HELO", "UPLD", "LIST", "DWLD", "DELF", "QUIT"]
-SINGLE_OPTION_COMMANDS = ["HELO", "LIST", "DWLD", "DELF"]
-DOUBLE_OPTION_COMMANDS = ["UPLD"]
+SINGLE_OPTION_COMMANDS = ["LIST", "DWLD", "DELF"]
+DOUBLE_OPTION_COMMANDS = ["HELO", "UPLD"]
 NO_OPTION_COMMANDS = ["QUIT"]
 
 # Global variables
@@ -66,39 +66,74 @@ class FTPServer:
                 # optional DATA_2 (DATA_2_LENGTH bytes)          #
                 # ################################################
 
-                command = self.connection.recv(4)
+                command = self.connection.recv(4).decode("utf-8")
                 vprint("Received command: {!r}".format(command))
                 if command in NO_OPTION_COMMANDS:
-                    self.close_connection()
-                    break
+                    # self.close_connection()
+                    # break
+                    if command == "QUIT":
+                        print("Client has disconnected.")
                 else:
                     # Receive DATA_1_LENGTH
+                    vprint("Receiving data_1_length...")
                     data_1_length_raw = self.connection.recv(2)
                     vprint("data_1_length_raw = {}".format(data_1_length_raw))
                     data_1_length = short_int.decode(data_1_length_raw.decode("utf-8"))
                     vprint("data_1_length = {}".format(data_1_length))
 
+                    # Receive DATA_1
+                    vprint("Receiving data_1...")
+                    data_1 = self.connection.recv(data_1_length)
+                    vprint("data_1 = {}".format(data_1))
 
+                    if command in DOUBLE_OPTION_COMMANDS:
+                        # Receive DATA_2_LENGTH
+                        vprint("Receiving data_2_length...")
+                        data_2_length_raw = self.connection.recv(2)
+                        vprint("data_2_length_raw = {}".format(data_2_length_raw))
+                        data_2_length = short_int.decode(data_2_length_raw.decode("utf-8"))
+                        vprint("data_2_length = {}".format(data_2_length))
 
-                    # Receive the data in small chunks
-                    response_list = []
-                    # response = b""
-                    while True:
-                        data = self.connection.recv(16)
-                        vprint("Received {!r}".format(data))
-                        if data:
-                            # vprint("Sending data back to the client")
-                            # self.connection.sendall(data)
-                            response_list.append(data)
-                        else:
-                            vprint("No data from {}".format(client_address))
-                            break
-                    response = b"".join(response_list)
-                    vprint("Total response: {}".format(response))
+                        # Receive DATA_2
+                        vprint("Receiving data_2...")
+                        data_2 = self.connection.recv(data_2_length)
+                        vprint("data_2 = {}".format(data_2))
+
+                    if command == "HELO":
+                        # Handle hello command
+                        pass
+                    elif command == "UPLD":
+                        # Handle upload command
+                        pass
+                    elif command == "LIST":
+                        # Handle list command
+                        pass
+                    elif command == "DWLD":
+                        # Handle download command
+                        pass
+                    elif command == "DELF":
+                        # Handle delete file command
+                        pass
+
+                    # # Receive the data in small chunks
+                    # response_list = []
+                    # # response = b""
+                    # while True:
+                    #     data = self.connection.recv(16)
+                    #     vprint("Received {!r}".format(data))
+                    #     if data:
+                    #         # vprint("Sending data back to the client")
+                    #         # self.connection.sendall(data)
+                    #         response_list.append(data)
+                    #     else:
+                    #         vprint("No data from {}".format(client_address))
+                    #         break
+                    # response = b"".join(response_list)
+                    # vprint("Total response: {}".format(response))
 
                     # Send the data back
-                    self.connection.sendall(response)
-                    break
+                    # self.connection.sendall(response)
+                    # break
             finally:
                 self.close_connection()
 
