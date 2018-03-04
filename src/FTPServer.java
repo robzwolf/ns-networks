@@ -20,7 +20,7 @@ public class FTPServer implements FTPServerInterface {
     private static int PORT;
 
     public FTPServer() {
-        System.out.println("FTPServer() constructor was called");
+        ePrint("FTPServer() constructor was called");
     }
     
     // Only prints if VERBOSE_PRINT is true
@@ -60,7 +60,8 @@ public class FTPServer implements FTPServerInterface {
     }
     
     public static void main(String[] args) {
-        System.out.println("Starting FTPServer application...");
+        ePrint("Starting FTPServer application...");
+        ePrint("Press Ctrl-C at any point to exit the application.");
         
         /* Handle arguments
          * Use `-v` to enable verbose print

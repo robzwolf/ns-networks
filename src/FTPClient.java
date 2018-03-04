@@ -62,7 +62,7 @@ public class FTPClient {
             }
             
             vPrint("Currently connected: " + isConnected());
-
+            ePrint("Successfully connected to server!");
         } catch (RemoteException | NotBoundException e) {
             ePrint("Client exception: " + e);
             e.printStackTrace();
@@ -113,7 +113,7 @@ public class FTPClient {
     
     public static void main(String[] args) {
         
-        System.out.println("Starting FTPClient application...");
+        ePrint("Starting FTPClient application...");
         
         // String host = (args.length < 1) ? null : args[0];
         
@@ -195,6 +195,8 @@ public class FTPClient {
         // Do the menu thing
         Scanner scanner = new Scanner(System.in);
         while (true) {
+            ePrint("");
+            ePrint(isConnected() ? "Currently connected to server." : "Not currently connected to server.");
             ePrint("");
             ePrint("## FTP Client Menu ##");
             ePrint("  CONN - connect to server");
