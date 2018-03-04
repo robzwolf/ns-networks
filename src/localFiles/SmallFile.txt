@@ -1,1 +1,0 @@
-The is a rather simple and small file to be used for testing a simple file transfer system.

@@ -1,8 +1,8 @@
-*.class
-out/
-.idea/
-*.iml
-.smbdelete*
-src/downloadedFiles/
-src/storedFiles/
-src/uploadedFiles/
+partB/*.class
+partB/out/
+partB/.idea/
+partB/*.iml
+partB/.smbdelete*
+partB/src/downloadedFiles/
+partB/src/storedFiles/
+partB/src/uploadedFiles/
