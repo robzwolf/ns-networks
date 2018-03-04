@@ -8,3 +8,4 @@ partB/src/storedFiles/
 partB/src/uploadedFiles/
 gitpwd
 .idea/
+partA/__pycache__/
