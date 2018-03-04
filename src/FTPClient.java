@@ -213,6 +213,14 @@ public class FTPClient {
             
             switch (command) {
                 case "CONN": {
+                    if(isConnected()) {
+                        ePrint("Already connected to server. Force reconnection? [y/n]: ");
+                        String reconnect = scanner.next().toLowerCase();
+                        if(!reconnect.equals("y")) {
+                            break;
+                        }
+                        SERVER_STUB = null;
+                    }
                     connectToServer();
                     break;
                 }
