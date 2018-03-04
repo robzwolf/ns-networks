@@ -18,48 +18,51 @@ def vprint(contents):
 
 class FTPServer:
 
-    def FTPServer():
+    def __init__(self):
         vprint("FTPServer constructor was called")
 
-    def say_hello():
+        # Create a TCP/IP socket
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        vprint(self.sock)
+
+        vprint("Made socket")
+
+    def say_hello(self):
         return HELLO_CHECK
 
-    def start_listening():
-
-        # Create a TCP/IP socket
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def start_listening(self):
 
         # Bind the socket to the port
-        server_address = ("localhost", 10000)
-        print("Starting on {} port {}".format(*server_address))
-        sock.bind(server_address)
+        server_address = ("", PORT)
+        print("Server now listening on {} port {}".format(*self.sock.getsockname(), PORT))
+        self.sock.bind(server_address)
 
         # Listen for incoming connections
-        sock.listen(1)
+        self.sock.listen(1)
 
         while True:
             # Wait for a connection
-            print("Waiting for a connection")
-            connection, client_address = sock.accept()
+            print("Waiting for a connection...")
+            self.connection, client_address = self.sock.accept()
             try:
                 print("Connection from", client_address)
 
                 # Receive the data in small chunks and retransmit it
                 while True:
-                    data = connection.recv(16)
+                    data = self.connection.recv(16)
                     print("Received {!r}".format(data))
                     if data:
                         print("Sending data back to the client")
-                        connection.sendall(data)
+                        self.connection.sendall(data)
                     else:
                         print("No data from", client_address)
                         break
 
             finally:
-                print("Cleaning up connection")
+                vprint("Cleaning up connection...")
                 # Clean up the connection
-                connection.close()
-                # sys.exit(0)
+                self.connection.close()
+                vprint("Closed connection.")
 
 
 def main():
@@ -94,6 +97,7 @@ def main():
     # Make server
     server = FTPServer()
     vprint("Made server")
+    server.start_listening()
 
 if __name__ == "__main__":
     main()
