@@ -43,6 +43,7 @@ public class FTPServer implements FTPServerInterface {
     public void uploadFile(String fileName, byte[] fileContents) {
         // Write `fileContents` to `fileName`
         ePrint("Received upload request: " + fileName);
+        ePrint("Upload file size: " + fileContents.length + " bytes");
         for (byte b : fileContents) {
             vPrint(b);
         }
@@ -53,11 +54,34 @@ public class FTPServer implements FTPServerInterface {
             Path path = Paths.get(FILE_STORAGE_PATH_PREFIX + fileName);
             Files.write(path, fileContents);
             vPrint("Wrote fileContents to " + FILE_STORAGE_PATH_PREFIX + fileName);
+            ePrint("Successfully received " + fileName + " (" + fileContents.length + " bytes).");
         } catch (IOException e) {
             vPrint(e);
         }
         
     }
+    /*
+    public byte[] downloadFile(String fileName) {
+        // Do the file upload
+        File toDownload = new File(localFileName);
+        vPrint("File '" + localFileName + "' exists() = " + toDownload.exists());
+        if (!toDownload.exists()) {
+            ePrint("Error: file '" + localFileName + "' not found.");
+            return;
+        } else {
+            try {
+                byte[] uploadBytes = Files.readAllBytes(toDownload.toPath());
+                for (byte b : uploadBytes) {
+                    vPrint(b);
+                }
+                return uploadBytes;
+            } catch (IOException e) {
+                vPrint(e);
+                e.printStackTrace();
+            }
+            
+        }
+    }*/
     
     public static void main(String[] args) {
         ePrint("Starting FTPServer application...");
