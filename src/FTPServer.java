@@ -10,10 +10,11 @@ import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.io.File;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 
 public class FTPServer implements FTPServerInterface {
     
-    private static final String FILE_STORAGE_PATH_PREFIX = "storedFiles/";
+    private static final String UPLOADED_FILES_STORAGE_PATH_PREFIX = "uploadedFiles/";
     
     // Fields
     private static boolean VERBOSE_PRINT;
@@ -48,40 +49,41 @@ public class FTPServer implements FTPServerInterface {
             vPrint(b);
         }
         try {
-            File file = new File(FILE_STORAGE_PATH_PREFIX + fileName);
+            File file = new File(UPLOADED_FILES_STORAGE_PATH_PREFIX + fileName);
             file.getParentFile().mkdirs(); 
             file.createNewFile();
-            Path path = Paths.get(FILE_STORAGE_PATH_PREFIX + fileName);
+            Path path = Paths.get(UPLOADED_FILES_STORAGE_PATH_PREFIX + fileName);
             Files.write(path, fileContents);
-            vPrint("Wrote fileContents to " + FILE_STORAGE_PATH_PREFIX + fileName);
+            vPrint("Wrote fileContents to " + UPLOADED_FILES_STORAGE_PATH_PREFIX + fileName);
             ePrint("Successfully received " + fileName + " (" + fileContents.length + " bytes).");
         } catch (IOException e) {
             vPrint(e);
         }
-        
     }
-    /*
-    public byte[] downloadFile(String fileName) {
+    
+    public byte[] downloadFile(String localFileName) throws FileNotFoundException {
         // Do the file upload
         File toDownload = new File(localFileName);
         vPrint("File '" + localFileName + "' exists() = " + toDownload.exists());
         if (!toDownload.exists()) {
             ePrint("Error: file '" + localFileName + "' not found.");
-            return;
+            throw new FileNotFoundException();
         } else {
             try {
                 byte[] uploadBytes = Files.readAllBytes(toDownload.toPath());
                 for (byte b : uploadBytes) {
                     vPrint(b);
                 }
+                ePrint("Client requested to download: " + localFileName + "(" + uploadBytes.length + " bytes).");
+                ePrint("Server sent: " + localFileName + "(" + uploadBytes.length + " bytes).");
                 return uploadBytes;
             } catch (IOException e) {
                 vPrint(e);
                 e.printStackTrace();
             }
-            
         }
-    }*/
+        return null;
+    }
     
     public static void main(String[] args) {
         ePrint("Starting FTPServer application...");

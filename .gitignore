@@ -3,3 +3,7 @@ out/
 .idea/
 *.iml
 .smbdelete*
+src/downloadedFiles/
+src/localFiles/
+src/storedFiles/
+src/uploadedFiles/

@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 
 public class FTPClient {
     
@@ -17,6 +18,7 @@ public class FTPClient {
     private static final String HOST = "mira1.dur.ac.uk";
     private static final String STUB_NAME = "xyz_robbie_nsnetworks_ftp_server";
     private static final String HELLO_CHECK = "Successfully connected to server!";
+    private static final String DOWNLOADED_FILE_STORAGE_PATH_PREFIX = "downloadedFiles/";
     
     // Fields
     private static boolean VERBOSE_PRINT;
@@ -100,8 +102,25 @@ public class FTPClient {
         // Get list of files from server and list them
     }
     
-    private static void downloadFile(String fileName) {
-        // Download a file from the server and save it to fileName (locally)
+    private static void downloadFile(String remoteFileName) {
+        // Write `fileContents` to `fileName`
+        ePrint("Requested remote file: " + remoteFileName);
+        try {
+            byte[] fileContents = SERVER_STUB.downloadFile(remoteFileName);
+            for (byte b : fileContents) {
+                vPrint(b);
+            }
+            File file = new File(DOWNLOADED_FILE_STORAGE_PATH_PREFIX + remoteFileName);
+            file.getParentFile().mkdirs(); 
+            file.createNewFile();
+            Path path = Paths.get(DOWNLOADED_FILE_STORAGE_PATH_PREFIX + remoteFileName);
+            Files.write(path, fileContents);
+            vPrint("Wrote fileContents to " + DOWNLOADED_FILE_STORAGE_PATH_PREFIX + remoteFileName);
+            ePrint("Successfully downloaded " + remoteFileName + " (" + fileContents.length + " bytes).");
+        } catch (IOException e) {
+            vPrint(e);
+            e.printStackTrace();
+        }
     }
     
     private static void deleteRemoteFile(String fileName) {
@@ -237,7 +256,9 @@ public class FTPClient {
                     break;
                 }
                 case "DWLD": {
-                    downloadFile("");
+                    ePrint("Enter the name of the file to download:");
+                    String fileName = scanner.next();
+                    downloadFile(fileName);
                     break;
                 }
                 case "DELF": {
