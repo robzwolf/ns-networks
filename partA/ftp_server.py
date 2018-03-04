@@ -12,9 +12,11 @@ HELLO_CHECK = "Successfully connected to server!"
 VERBOSE_PRINT = False
 PORT = -1
 
+
 def vprint(contents):
     if VERBOSE_PRINT:
         print(contents)
+
 
 class FTPServer:
 
@@ -98,6 +100,7 @@ def main():
     server = FTPServer()
     vprint("Made server")
     server.start_listening()
+
 
 if __name__ == "__main__":
     main()
