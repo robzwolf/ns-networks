@@ -1,10 +1,25 @@
 # Networks and Systems Assignment
 COMP2211 Networks and Systems – Networks and Distributed Systems assignment.
 
-## Package
+## Command Line Options
+### Verbose Printing `-v` / `--verbose`
+Print lots of extra debugging information.
+
+### Specify Port `-p <port>` / `--port <port>`
+Run the server/client on the the specified port, e.g. `-p 37001` will run on port `37001`.
+
+## Part A
+### How to Run Python Files
+1) Navigate to `ns-networks-fresh/partA/`
+2) Run the server: `python3 ftp_server.py -p 40404`
+3) Run the client: `python3 ftp_client.py -p 40404`
+
+## Part B
+
+### Package
 All Java files are in the `xyz.robbie.nsnetworks` package.
 
-## How to Run
+### How to Run Java Files
 1) Store `.java` files in `~/ns-networks-DUR1/src/`
 2) SSH into mira1: `ssh vzbf32@mira1.dur.ac.uk`
 3) SSH into mira1 from another terminal: `ssh vzbf32@mira1.dur.ac.uk`
@@ -17,9 +32,3 @@ All Java files are in the `xyz.robbie.nsnetworks` package.
 8) From second terminal, start client: `java xyz.robbie.nsnetworks.FTPClient -p 37002`
 
 
-## Command Line Options
-### Verbose Printing `-v`
-Print lots of extra debugging information.
-
-### Specify Port `-p <port>`
-Run the server/client on the the specified port, e.g. `-p 37001` will run on port `37001`.
