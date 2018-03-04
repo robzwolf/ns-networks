@@ -68,25 +68,25 @@ class FTPClient:
             self.sock.sendall(message)
 
             response = b""
-
+            #
             # Receive the data in small chunks
-            while True:
-                vprint("Waiting for response size 16")
-                chunk = self.sock.recv(16)
-                vprint("Received {!r}".format(chunk))
-                response += chunk
-                if not chunk:
-                    vprint("Response was none")
-                    break
-                # if len(chunk) < 16:
-                #     vprint("That was the final transmission")
-                #     break
-                #     vprint("Sending data back to the client")
-                #     self.sock.sendall(data)
-                # else:
-                #     vprint("No data from server")
-                #     break
-            vprint("RESPONSE = {}".format(response))
+            # while True:
+            #     vprint("Waiting for response size 16")
+            #     chunk = self.sock.recv(16)
+            #     vprint("Received {!r}".format(chunk))
+            #     response += chunk
+            #     if not chunk:
+            #         vprint("Response was none")
+            #         break
+            #     # if len(chunk) < 16:
+            #     #     vprint("That was the final transmission")
+            #     #     break
+            #     #     vprint("Sending data back to the client")
+            #     #     self.sock.sendall(data)
+            #     # else:
+            #     #     vprint("No data from server")
+            #     #     break
+            # vprint("RESPONSE = {}".format(response))
 
             # Look for the response
             # amount_received = 0
@@ -109,7 +109,7 @@ class FTPClient:
 
     def menu(self):
         print()
-        print("## FTP Client Menu")
+        print("## FTP Client Menu ##")
         print("   CONN - connect to server")
         print("   UPLD - upload a file to the server")
         print("   LIST - list the files on the server")

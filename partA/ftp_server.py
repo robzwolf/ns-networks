@@ -7,6 +7,10 @@ import argparse
 # Constants
 DEFAULT_PORT = 1337
 HELLO_CHECK = b"Successfully connected to server!"
+VALID_COMMANDS = ["HELO", "UPLD", "LIST", "DWLD", "DELF", "QUIT"]
+SINGLE_OPTION_COMMANDS = ["HELO", "LIST", "DWLD", "DELF"]
+DOUBLE_OPTION_COMMANDS = ["UPLD"]
+NO_OPTION_COMMANDS = ["QUIT"]
 
 # Global variables
 VERBOSE_PRINT = False
@@ -52,22 +56,54 @@ class FTPServer:
             try:
                 vprint("Connection from {}".format(client_address))
 
-                # Receive the data in small chunks and retransmit it
-                while True:
-                    data = self.connection.recv(16)
-                    vprint("Received {!r}".format(data))
-                    if data:
-                        vprint("Sending data back to the client")
-                        self.connection.sendall(data)
-                    else:
-                        vprint("No data from {}".format(client_address))
-                        break
+                # Let's assume the data is in our required format:
+                # ################################################
+                # COMMAND (4-bytes)                              #
+                # optional DATA_1_LENGTH (2 bytes)               #
+                # optional DATA_1 (DATA_1_LENGTH bytes)          #
+                # optional DATA_2_LENGTH (4 bytes)               #
+                # optional DATA_2 (DATA_2_LENGTH bytes)          #
+                # ################################################
 
+                command = self.connection.recv(4)
+                vprint("Received command: {!r}".format(command))
+                if command in NO_OPTION_COMMANDS:
+                    self.close_connection()
+                    break
+                else:
+                    # Receive DATA_1_LENGTH
+                    data_1_length = int(self.connection.recv(2))
+                    vprint("data_1_length = {}".format(data_1_length))
+
+
+
+                    # Receive the data in small chunks
+                    response_list = []
+                    # response = b""
+                    while True:
+                        data = self.connection.recv(16)
+                        vprint("Received {!r}".format(data))
+                        if data:
+                            # vprint("Sending data back to the client")
+                            # self.connection.sendall(data)
+                            response_list.append(data)
+                        else:
+                            vprint("No data from {}".format(client_address))
+                            break
+                    response = b"".join(response_list)
+                    vprint("Total response: {}".format(response))
+
+                    # Send the data back
+                    self.connection.sendall(response)
+                    break
             finally:
-                vprint("Cleaning up connection...")
-                # Clean up the connection
-                self.connection.close()
-                vprint("Closed connection.")
+                self.close_connection()
+
+    def close_connection(self):
+        vprint("Cleaning up connection...")
+        # Clean up the connection
+        self.connection.close()
+        vprint("Closed connection.")
 
 
 def main():
