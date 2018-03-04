@@ -4,6 +4,5 @@ out/
 *.iml
 .smbdelete*
 src/downloadedFiles/
-src/localFiles/
 src/storedFiles/
 src/uploadedFiles/
