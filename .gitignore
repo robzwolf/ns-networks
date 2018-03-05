@@ -9,3 +9,6 @@ partB/src/uploadedFiles/
 gitpwd
 .idea/
 partA/__pycache__/
+partA/client/__pycache__/
+partA/server/__pycache__/
+partA/client/local_files/short_text_file.txt
