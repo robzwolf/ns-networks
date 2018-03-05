@@ -4,6 +4,7 @@ import socket
 import sys
 import argparse
 import number_converter
+import os
 
 # Constants
 DEFAULT_PORT = 1337
@@ -48,7 +49,13 @@ class FTPServer:
             return HELLO_CHECK
 
     def receive_upload(self, data_1, data_2):
-        return bytes("Received {} ({} bytes)".format(data_1, len(data_2)), "utf-8")
+        file_name = data_1.decode("utf-8")
+        # Make the directories if needed
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
+        with open(file_name, 'wb') as binary_file:
+            binary_file.write(data_2)
+        print("Received {} ({} bytes).".format(file_name, len(data_2)))
+        return bytes("Successfully uploaded {} ({} bytes)".format(file_name, len(data_2)), "utf-8")
 
     def start_listening(self):
 
@@ -85,6 +92,7 @@ class FTPServer:
                         print("Client has disconnected.")
                 else:
 
+                    # Initialise data_1 and data_2
                     data_1 = b""
                     data_2 = b""
 

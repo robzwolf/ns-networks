@@ -166,7 +166,12 @@ class FTPClient:
                     vprint("Print file contents...")
                     vprint(file_contents)
                 # Upload the file_contents
-                self.send_data("UPLD", bytes(file_name, "utf-8"), file_contents)
+                response = self.send_data("UPLD", bytes(file_name, "utf-8"), file_contents)[0]
+                if response[:21] == b"Successfully uploaded":
+                    print("Successfully uploaded {} ({} bytes).".format(file_name, len(file_contents)))
+                else:
+                    vprint("Unsuccessful upload - response was: {}".format(response))
+                    print("Upload not successful.")
             except FileNotFoundError as e:
                 vprint(e)
                 print("Error: File '{}' not found.".format(file_name))
