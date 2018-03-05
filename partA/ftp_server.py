@@ -9,8 +9,8 @@ import number_converter
 DEFAULT_PORT = 1337
 HELLO_CHECK = b"Successfully connected to server!"
 VALID_COMMANDS = ["HELO", "UPLD", "LIST", "DWLD", "DELF", "QUIT"]
-SINGLE_OPTION_COMMANDS = ["HELO", "LIST", "DWLD", "DELF"]
-DOUBLE_OPTION_COMMANDS = ["UPLD"]
+SINGLE_OPTION_COMMANDS = ["LIST", "DWLD", "DELF"]
+DOUBLE_OPTION_COMMANDS = ["HELO", "UPLD"]
 NO_OPTION_COMMANDS = ["QUIT"]
 
 # Global variables
@@ -78,7 +78,7 @@ class FTPServer:
                     vprint("Receiving data_1_length...")
                     data_1_length_raw = self.connection.recv(2)
                     vprint("data_1_length_raw = {}".format(data_1_length_raw))
-                    data_1_length = number_converter.decode_from_short_int(data_1_length_raw.decode("utf-8"))
+                    data_1_length = number_converter.decode_to_short(data_1_length_raw)
                     vprint("data_1_length = {}".format(data_1_length))
 
                     # Receive DATA_1
@@ -89,9 +89,9 @@ class FTPServer:
                     if command in DOUBLE_OPTION_COMMANDS:
                         # Receive DATA_2_LENGTH
                         vprint("Receiving data_2_length...")
-                        data_2_length_raw = self.connection.recv(2)
+                        data_2_length_raw = self.connection.recv(4)
                         vprint("data_2_length_raw = {}".format(data_2_length_raw))
-                        data_2_length = number_converter.decode_from_short_int(data_2_length_raw.decode("utf-8"))
+                        data_2_length = number_converter.decode_to_long(data_2_length_raw)
                         vprint("data_2_length = {}".format(data_2_length))
 
                         # Receive DATA_2

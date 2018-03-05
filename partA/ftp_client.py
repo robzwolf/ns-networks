@@ -1,5 +1,5 @@
 # ftp_client.py
-import fileinput
+
 import socket
 import sys
 import argparse
@@ -71,17 +71,19 @@ class FTPClient:
 
             if data_1 is not None:
                 vprint("len(data_1) = {}".format(len(data_1)))
-                vprint("number_converter.encode_to_short_int(len(data_1)) = {}".format(number_converter.encode_to_short_int(len(data_1))))
-                message += bytes(number_converter.encode_to_short_int(len(data_1)), "utf-8")
+                data_1_length_encoded = number_converter.encode_to_short(len(data_1))
+                message += data_1_length_encoded
+                vprint("data_1_length_encoded = {}".format(data_1_length_encoded))
                 message += data_1
                 vprint("message = {}".format(message))
 
             if data_2 is not None:
                 vprint("len(data_2) = {}".format(len(data_2)))
-                vprint("number_converter.encode_to_short_int(len(data_2)) = {}".format(number_converter.encode_to_short_int(len(data_2))))
-                message += bytes(number_converter.encode_to_short_int(len(data_2)), "utf-8")
+                data_2_length_encoded = number_converter.encode_to_long(len(data_2))
+                message += data_2_length_encoded
+                vprint("data_2_length_encoded = {}".format(data_2_length_encoded))
                 message += data_2
-                vprint("message = {}".format(message))
+                vprint("sending message: {}".format(message))
 
             # Send the message
             self.sock.sendall(message)
