@@ -3,7 +3,7 @@
 import socket
 import sys
 import argparse
-import short_int
+import number_converter
 
 # Constants
 DEFAULT_PORT = 1337
@@ -78,7 +78,7 @@ class FTPServer:
                     vprint("Receiving data_1_length...")
                     data_1_length_raw = self.connection.recv(2)
                     vprint("data_1_length_raw = {}".format(data_1_length_raw))
-                    data_1_length = short_int.decode(data_1_length_raw.decode("utf-8"))
+                    data_1_length = number_converter.decode_from_short_int(data_1_length_raw.decode("utf-8"))
                     vprint("data_1_length = {}".format(data_1_length))
 
                     # Receive DATA_1
@@ -91,7 +91,7 @@ class FTPServer:
                         vprint("Receiving data_2_length...")
                         data_2_length_raw = self.connection.recv(2)
                         vprint("data_2_length_raw = {}".format(data_2_length_raw))
-                        data_2_length = short_int.decode(data_2_length_raw.decode("utf-8"))
+                        data_2_length = number_converter.decode_from_short_int(data_2_length_raw.decode("utf-8"))
                         vprint("data_2_length = {}".format(data_2_length))
 
                         # Receive DATA_2

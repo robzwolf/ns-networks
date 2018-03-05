@@ -3,7 +3,7 @@ import fileinput
 import socket
 import sys
 import argparse
-import short_int
+import number_converter
 
 # Constants
 DEFAULT_PORT = 1337
@@ -71,15 +71,15 @@ class FTPClient:
 
             if data_1 is not None:
                 vprint("len(data_1) = {}".format(len(data_1)))
-                vprint("short_int.encode(len(data_1)) = {}".format(short_int.encode(len(data_1))))
-                message += bytes(short_int.encode(len(data_1)), "utf-8")
+                vprint("number_converter.encode_to_short_int(len(data_1)) = {}".format(number_converter.encode_to_short_int(len(data_1))))
+                message += bytes(number_converter.encode_to_short_int(len(data_1)), "utf-8")
                 message += data_1
                 vprint("message = {}".format(message))
 
             if data_2 is not None:
                 vprint("len(data_2) = {}".format(len(data_2)))
-                vprint("short_int.encode(len(data_2)) = {}".format(short_int.encode(len(data_2))))
-                message += bytes(short_int.encode(len(data_2)), "utf-8")
+                vprint("number_converter.encode_to_short_int(len(data_2)) = {}".format(number_converter.encode_to_short_int(len(data_2))))
+                message += bytes(number_converter.encode_to_short_int(len(data_2)), "utf-8")
                 message += data_2
                 vprint("message = {}".format(message))
 
