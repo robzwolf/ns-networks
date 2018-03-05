@@ -40,6 +40,13 @@ class FTPServer:
     def say_hello(self):
         return HELLO_CHECK
 
+    def hello(self, data_1):
+        if data_1 != HELLO_CHECK:
+            vprint("HELLO_CHECK mismatch. Expected '{}' but received '{}'".format(HELLO_CHECK, data_1))
+            return b"MISMATCH"
+        else:
+            return HELLO_CHECK
+
     def start_listening(self):
 
         # Bind the socket to the port
@@ -99,8 +106,12 @@ class FTPServer:
                         data_2 = self.connection.recv(data_2_length)
                         vprint("data_2 = {}".format(data_2))
 
+                    response_1 = b""
+                    response_2 = b""
+
                     if command == "HELO":
                         # Handle hello command
+                        response_1 = self.hello(data_1)
                         pass
                     elif command == "UPLD":
                         # Handle upload command
@@ -134,6 +145,30 @@ class FTPServer:
                     # Send the data back
                     # self.connection.sendall(response)
                     # break
+
+                    # Send back the response
+                    response_message = b""
+
+                    vprint("response_1 = {}".format(response_1))
+                    vprint("response_2 = {}".format(response_2))
+
+                    # Prepare response 1
+                    vprint("len(response_1) = {}".format(len(response_1)))
+                    response_1_length_encoded = number_converter.encode_to_short(len(response_1))
+                    response_message += response_1_length_encoded
+                    vprint("response_1_length_encoded = {}".format(response_1_length_encoded))
+                    response_message += response_1
+                    vprint("message = {}".format(response_message))
+
+                    # Prepare response 2
+                    vprint("len(response_2) = {}".format(len(response_2)))
+                    response_2_length_encoded = number_converter.encode_to_short(len(response_2))
+                    response_message += response_2_length_encoded
+                    vprint("response_2_length_encoded = {}".format(response_2_length_encoded))
+                    response_message += response_2
+                    vprint("message = {}".format(response_message))
+
+                    self.connection.sendall(response_message)
             finally:
                 self.close_connection()
 

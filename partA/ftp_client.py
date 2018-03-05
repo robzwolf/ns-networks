@@ -12,6 +12,7 @@ HELLO_CHECK = b"Successfully connected to server!"
 # Global variables
 VERBOSE_PRINT = False
 PORT = -1
+IS_CONNECTED = False
 
 
 def vprint(contents):
@@ -28,45 +29,26 @@ class FTPClient:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def make_connection(self):
-
-        response = self.send_data("HELO", HELLO_CHECK, b"This is a random message... :-)")
-        if response != HELLO_CHECK:
+        print("Making initial connection to " + str(self.sock.getsockname()[0]) + " port " + str(PORT) + "...")
+        response_1, response_2 = self.send_data("HELO", HELLO_CHECK, b"This is a random message... :-)")
+        if response_1 != HELLO_CHECK:
             vprint("HELLO_CHECK mismatch!")
+        else:
+            vprint("HELO matched correctly.")
+            print("Successfully connected to server.")
+            global IS_CONNECTED
+            IS_CONNECTED = True
 
-        # Connect the socket to the port where the server is listening
-        # server_address = ("", PORT)
-        # print("Connecting to {} port {}".format(*self.sock.getsockname(), PORT))
-        # self.sock.connect(server_address)
-
-        # try:
-        #     # Send data
-        #     message = b"This is the message. It will be sent back."
-        #     print("Sending {!r}".format(message))
-        #     self.sock.sendall(message)
-        #
-        #     # Look for the response
-        #     amount_received = 0
-        #     amount_expected = len(message)
-        #
-        #     while amount_received < amount_expected:
-        #         data = self.sock.recv(16)
-        #         amount_received += len(data)
-        #         print("Received {!r}".format(data))
-        #
-        # finally:
-        #     self.close_connection()
-
-    def send_data(self, command, data_1=None, data_2=None):
+    def send_data(self, command, data_1=None, data_2=None, expect_two_responses=False):
         # Connect the socket to the port where the server is listening
         server_address = ("", PORT)
-        print("Connecting to {} port {}".format(*self.sock.getsockname(), PORT))
+        vprint("Connecting to {} port {}".format(self.sock.getsockname()[0], PORT))
         self.sock.connect(server_address)
 
         try:
             message = b""
             # Send command
-            print("Sending:\n{!r}".format(command))
-            # self.sock.sendall(bytes(command))
+            vprint("Sending:\n{!r}".format(command))
             message += bytes(command, "utf-8")
 
             if data_1 is not None:
@@ -88,48 +70,53 @@ class FTPClient:
             # Send the message
             self.sock.sendall(message)
 
-            response = b""
-            #
-            # Receive the data in small chunks
-            # while True:
-            #     vprint("Waiting for response size 16")
-            #     chunk = self.sock.recv(16)
-            #     vprint("Received {!r}".format(chunk))
-            #     response += chunk
-            #     if not chunk:
-            #         vprint("Response was none")
-            #         break
-            #     # if len(chunk) < 16:
-            #     #     vprint("That was the final transmission")
-            #     #     break
-            #     #     vprint("Sending data back to the client")
-            #     #     self.sock.sendall(data)
-            #     # else:
-            #     #     vprint("No data from server")
-            #     #     break
-            # vprint("RESPONSE = {}".format(response))
-
-            # Look for the response
-            # amount_received = 0
-            # amount_expected = len(message)
-            #
-            # while amount_received < amount_expected:
-            #     data = self.sock.recv(16)
-            #     amount_received += len(data)
-            #     print("Received {!r}".format(data))
+            # Get the response(s)
+            response_1, response_2 = self.receive_data(expect_two_responses)
+            return response_1, response_2
 
         finally:
             self.close_connection()
 
-        return response
+    def receive_data(self, expect_two_responses=False):
+        # Receive RESPONSE_1_LENGTH
+        vprint("Receiving response_1_length...")
+        response_1_length_raw = self.sock.recv(2)
+        vprint("response_1_length_raw = {}".format(response_1_length_raw))
+        response_1_length = number_converter.decode_to_short(response_1_length_raw)
+        vprint("response_1_length = {}".format(response_1_length))
+
+        # Receive RESPONSE_1
+        vprint("Receiving response_1...")
+        response_1 = self.sock.recv(response_1_length)
+        vprint("response_1 = {}".format(response_1))
+
+        if expect_two_responses:
+            # Receive RESPONSE_2_LENGTH
+            vprint("Receiving response_2_length...")
+            response_2_length_raw = self.sock.recv(4)
+            vprint("response_2_length_raw = {}".format(response_2_length_raw))
+            response_2_length = number_converter.decode_to_short(response_2_length_raw)
+            vprint("response_2_length = {}".format(response_2_length))
+
+            # Receive RESPONSE_2
+            vprint("Receiving response_2...")
+            response_2 = self.sock.recv(response_2_length)
+            vprint("response_2 = {}".format(response_2))
+
+            return response_1, response_2
+
+        else:
+            return response_1, None
 
     def close_connection(self):
         vprint("Closing socket...")
         self.sock.close()
-        print("Connection closed.")
+        vprint("Connection closed.")
 
     def menu(self):
         print()
+        print("#########################################")
+        print("## Status: {}".format("Connected to server " if IS_CONNECTED else "Not connected to server"))
         print("## FTP Client Menu ##")
         print("   CONN - connect to server")
         print("   UPLD - upload a file to the server")
@@ -145,6 +132,7 @@ class FTPClient:
             self.make_connection()
         elif command == "UPLD":
             vprint("User wanted UPLD")
+            self.upload_file()
         elif command == "LIST":
             vprint("User wanted LIST")
         elif command == "DWLD":
@@ -156,12 +144,20 @@ class FTPClient:
             self.close_connection()
             return -1
 
+    def upload_file(self):
+        if not IS_CONNECTED:
+            print("Error: You are not connected to the server. Use CONN command first.")
+        else:
+            # Do some upload stuff
+            file_name = input("Enter the name of the file to upload: ")
+            vprint("User wanted to upload '{}'".format(file_name))
+
 
 def main():
     # Define arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Enable verbose printing", action="store_true")
-    parser.add_argument("-p", "--port", help="Specify a port to connec to", type=int)
+    parser.add_argument("-p", "--port", help="Specify a port to connect to", type=int)
     args = parser.parse_args()
 
     # Global inits
