@@ -165,8 +165,16 @@ class FTPClient:
                     file_contents = binary_file.read()
                     vprint("Print file contents...")
                     vprint(file_contents)
-                # Upload the file_contents
-                response = self.send_data("UPLD", bytes(file_name, "utf-8"), file_contents)[0]
+
+                # Upload the file name
+                response = self.send_data("UPLD", bytes(file_name, "utf-8"))
+
+                # Check server is ready
+                if response != "ready":
+                    # Handle the non-ready state appropriately, probably just inform the user and try upload again
+                    pass
+                # # Upload the file_contents
+                # response = self.send_data("UPLD", bytes(file_name, "utf-8"), file_contents)[0]
                 if response[:21] == b"Successfully uploaded":
                     print("Successfully uploaded {} ({} bytes).".format(file_name, len(file_contents)))
                 else:

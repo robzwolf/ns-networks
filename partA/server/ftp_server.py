@@ -48,7 +48,7 @@ class FTPServer:
         else:
             return HELLO_CHECK
 
-    def receive_upload(self, data_1, data_2):
+    def handle_upload(self, data_1, data_2):
         file_name = data_1.decode("utf-8")
         # Make the directories if needed
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
@@ -56,6 +56,10 @@ class FTPServer:
             binary_file.write(data_2)
         print("Received {} ({} bytes).".format(file_name, len(data_2)))
         return bytes("Successfully uploaded {} ({} bytes)".format(file_name, len(data_2)), "utf-8")
+
+    def handle_download(self, data_1):
+        file_name = data_1.decode("utf-8")
+
 
     def start_listening(self):
 
@@ -130,7 +134,7 @@ class FTPServer:
                         pass
                     elif command == "UPLD":
                         # Handle upload command
-                        response_1 = self.receive_upload(data_1, data_2)
+                        response_1 = self.handle_upload(data_1, data_2)
                         pass
                     elif command == "LIST":
                         # Handle list command
