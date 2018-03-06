@@ -27,7 +27,7 @@ class FTPClient:
 
     def make_connection(self):
         """
-        Makes a test connection to the server by sending a short hello message and checking the response is the same.
+        Makes a connection to the server by sending a short hello message and checking the response is the same.
         """
         global IS_CONNECTED
         vprint("IS_CONNECTED = {}".format(IS_CONNECTED))
@@ -36,7 +36,6 @@ class FTPClient:
         # Create a TCP/IP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_address = ("", PORT)
-        # vprint("Connecting to {} port {}".format(self.sock.getsockname()[0], PORT))
         vprint("Connecting to server on port {}".format(PORT))
         self.sock.connect(server_address)
 
@@ -51,13 +50,6 @@ class FTPClient:
                 vprint("HELO matched correctly.")
                 print("Successfully connected to server.")
                 IS_CONNECTED = True
-            # response_1, response_2 = self.send_data("HELO", HELLO_CHECK, b"This is a random message... :-)")
-            # print("Made initial connection to " + str(self.sock.getsockname()[0]) + " port " + str(PORT) + "...")
-            # if response_1 != HELLO_CHECK:
-            #     vprint("HELLO_CHECK mismatch!")
-            # else:
-            #     vprint("HELO matched correctly.")
-            #     print("Successfully connected to server.")
         else:
             print("Already connected to server.")
 
@@ -109,82 +101,6 @@ class FTPClient:
             response = self.sock.recv(receive_length)
         return response
 
-    # def send_data(self, command, data_1=None, data_2=None, expect_two_responses=False):
-    #
-    #
-    #     try:
-    #         message = b""
-    #         # Send command
-    #         vprint("Sending:\n{!r}".format(command))
-    #         message += bytes(command, "utf-8")
-    #
-    #         if data_1 is not None:
-    #
-    #             message += self.data_length(data_1)
-    #             message += data_1
-    #             vprint("message = {}".format(message))
-    #
-    #         if data_2 is not None:
-    #             vprint("len(data_2) = {}".format(len(data_2)))
-    #             data_2_length_encoded = len(data_2).to_bytes(2, "little")
-    #             message += data_2_length_encoded
-    #             vprint("data_2_length_encoded = {}".format(data_2_length_encoded))
-    #             message += data_2
-    #             vprint("sending message: {}".format(message))
-    #
-    #         # Send the message
-    #         self.sock.sendall(message)
-    #
-    #         # Get the response(s)
-    #         response_1, response_2 = self.receive_data(expect_two_responses)
-    #         return response_1, response_2
-    #
-    #     finally:
-    #         self.close_connection()
-
-    # def data_length(self, data_1):
-    #     """
-    #     Returns the
-    #     :param data_1:
-    #     :return:
-    #     """
-    #     vprint("len(data_1) = {}".format(len(data_1)))
-    #     data_1_length_encoded = len(data_1).to_bytes(2, "little")
-    #     vprint("data_1_length_encoded = {}".format(data_1_length_encoded))
-    #     return data_1_length_encoded
-    #     # message += data_1_length_encoded
-
-    # def receive_data(self, expect_two_responses=False):
-    #     # Receive RESPONSE_1_LENGTH
-    #     vprint("Receiving response_1_length...")
-    #     response_1_length_raw = self.sock.recv(2)
-    #     vprint("response_1_length_raw = {}".format(response_1_length_raw))
-    #     response_1_length = int.from_bytes(response_1_length_raw, "little")
-    #     vprint("response_1_length = {}".format(response_1_length))
-    #
-    #     # Receive RESPONSE_1
-    #     vprint("Receiving response_1...")
-    #     response_1 = self.sock.recv(response_1_length)
-    #     vprint("response_1 = {}".format(response_1))
-    #
-    #     if expect_two_responses:
-    #         # Receive RESPONSE_2_LENGTH
-    #         vprint("Receiving response_2_length...")
-    #         response_2_length_raw = self.sock.recv(4)
-    #         vprint("response_2_length_raw = {}".format(response_2_length_raw))
-    #         response_2_length = int.from_bytes(response_2_length_raw, "little")
-    #         vprint("response_2_length = {}".format(response_2_length))
-    #
-    #         # Receive RESPONSE_2
-    #         vprint("Receiving response_2...")
-    #         response_2 = self.sock.recv(response_2_length)
-    #         vprint("response_2 = {}".format(response_2))
-    #
-    #         return response_1, response_2
-    #
-    #     else:
-    #         return response_1, None
-
     def quit(self):
         print("Quitting...")
         if IS_CONNECTED:
@@ -227,11 +143,7 @@ class FTPClient:
             vprint("User wanted DELF")
         elif command == "QUIT":
             vprint("User wanted QUIT")
-            # self.close_connection()
             self.quit()
-
-            # # Break out of the menu (while True) loop
-            # return False
         else:
             print("Command '{}' not recognised.".format(command))
 
@@ -247,17 +159,18 @@ class FTPClient:
                     # Read the whole file at once
                     file_contents = binary_file.read()
                     vprint("Printing file contents... {}".format(file_contents))
-                    # vprint(file_contents)
 
                 # Upload the command and file name
                 vprint("Sending command")
                 self.send_command("UPLD")
                 vprint("Sending file name")
                 self.send_data(file_name, "short")
+
+                # Get the acknowledgement
                 vprint("Receiving acknowledgement")
                 response = self.receive_data()
-                # response = self.send_data("UPLD", bytes(file_name, "utf-8"))[0]
                 vprint("UPLD mid acknowledgement = {}".format(response))
+
                 # Check server is ready
                 if response != b"READY FOR UPLOAD":
                     # Handle the non-ready state appropriately, probably just inform the user and try upload again
@@ -270,16 +183,11 @@ class FTPClient:
                     response = self.receive_data().decode("utf-8")
 
                     if response[:9+len(file_name)] == "Received " + file_name:
-                        # Response is the results
+                        # Response is basically the results
                         print(response.replace("Received", "Successfully uploaded"))
                     else:
                         # Something went wrong
                         print("Error during upload: {}".format(response))
-                #     if response[:21] == b"Successfully uploaded":
-                #         print("Successfully uploaded {} ({} bytes).".format(file_name, len(file_contents)))
-                #     else:
-                #         vprint("Unsuccessful upload - response was: {}".format(response))
-                # #         print("Upload not successful.")
             except FileNotFoundError as e:
                 vprint(e)
                 print("Error: File '{}' not found.".format(file_name))
