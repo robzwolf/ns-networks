@@ -49,7 +49,7 @@ class FTPClient:
             return False
         if type(data) != bytes:
             data = bytes(data, "utf-8")
-        data_length = len(data).to_bytes(bytes_length, "big")
+        data_length = len(data).to_bytes(bytes_length, "big", signed=True)
         self.sock.sendall(data_length + data)
 
     def receive_data(self, variable_length_response=True, data_length_size="long"):
@@ -67,7 +67,7 @@ class FTPClient:
             vprint("Invalid data_length_size parameter: {}".format(data_length_size))
             return b""
         if variable_length_response:
-            response_length = int.from_bytes(self.sock.recv(receive_length), "big")
+            response_length = int.from_bytes(self.sock.recv(receive_length), "big", signed=True)
             response = self.sock.recv(response_length)
         else:
             response = self.sock.recv(receive_length)
@@ -118,47 +118,82 @@ class FTPClient:
     def upload_file(self):
         if not IS_CONNECTED:
             print("Error: You are not connected to the server. Use CONN command first.")
-        else:
-            # Do some upload stuff
-            file_name = input("Enter the name of the file to upload: ")
-            vprint("User wanted to upload '{}'".format(file_name))
-            try:
-                with open(file_name, "rb") as binary_file:
-                    # Read the whole file at once
-                    file_contents = binary_file.read()
-                    vprint("Printing file contents... {}".format(file_contents))
+            return
 
-                # Upload the command and file name
-                vprint("Sending command")
-                self.send_command("UPLD")
-                vprint("Sending file name")
-                self.send_data(file_name, "short")
+        file_name = input("Enter the name of the local file to upload: ")
+        vprint("User wanted to upload '{}'".format(file_name))
+        try:
+            with open(file_name, "rb") as binary_file:
+                # Read the whole file at once
+                file_contents = binary_file.read()
+                vprint("Printing file contents... {}".format(file_contents))
 
-                # Get the acknowledgement
-                vprint("Receiving acknowledgement")
+            # Send the command and file name
+            vprint("Sending UPLD command")
+            self.send_command("UPLD")
+            vprint("Sending file name")
+            self.send_data(file_name, "short")
+
+            # Get the acknowledgement
+            vprint("Receiving acknowledgement")
+            response = self.receive_data().decode("utf-8")
+            vprint("UPLD mid acknowledgement = {}".format(response))
+
+            # Check server is ready
+            if response != "READY FOR UPLOAD":
+                # Handle the non-ready state appropriately, probably just inform the user and try upload again
+                pass
+            else:
+                # Upload the file_contents
+                self.send_data(file_contents, "long")
+
+                # Get the transfer process results
                 response = self.receive_data().decode("utf-8")
-                vprint("UPLD mid acknowledgement = {}".format(response))
 
-                # Check server is ready
-                if response != "READY FOR UPLOAD":
-                    # Handle the non-ready state appropriately, probably just inform the user and try upload again
-                    pass
+                if response[:9+len(file_name)] == "Received " + file_name:
+                    # Response is basically the results
+                    print(response.replace("Received", "Successfully uploaded"))
                 else:
-                    # Upload the file_contents
-                    self.send_data(file_contents, "long")
+                    # Something went wrong
+                    print("Error during upload: {}".format(response))
+        except FileNotFoundError as e:
+            vprint(e)
+            print("Error: File '{}' not found.".format(file_name))
 
-                    # Get the transfer process results
-                    response = self.receive_data().decode("utf-8")
+    def download_file(self):
+        if not IS_CONNECTED:
+            print("Error: You are not connected to the server. Use CONN command first.")
+            return
 
-                    if response[:9+len(file_name)] == "Received " + file_name:
-                        # Response is basically the results
-                        print(response.replace("Received", "Successfully uploaded"))
-                    else:
-                        # Something went wrong
-                        print("Error during upload: {}".format(response))
-            except FileNotFoundError as e:
-                vprint(e)
-                print("Error: File '{}' not found.".format(file_name))
+        file_name = input("Enter the name of the remote file to download: ")
+        vprint("User wanted to download '{}'".format(file_name))
+
+        # Send the command and file name
+        vprint("Sending DWLD command")
+        self.send_command("DWLD")
+        vprint("Sending file name")
+        self.send_data(file_name, "short")
+
+        # Getting file status (file size or -1 if not exists)
+        file_size_raw = self.receive_data(variable_length_response=False, data_length_size="long")
+        file_size = int.from_bytes(file_size_raw, "big", signed=True)
+        vprint("File 'size' of '{}' is: {}".format(file_name, file_size))
+
+        if file_size == -1:
+            # File does not exist
+            print("The file does not exist on server")
+            return
+        else:
+            # File does exist
+            # Use sock.recv because we already know the data length
+            file_contents = self.sock.recv(file_size)
+            vprint("File contents = {}".format(file_contents))
+
+            # Write the results to file
+            with open(file_name, "wb") as binary_file:
+                binary_file.write(file_contents)
+            results = "Received {} ({} bytes).".format(file_name, len(file_contents))
+            print(results.replace("Received", "Downloaded"))
 
     def menu(self):
         print()
@@ -184,6 +219,7 @@ class FTPClient:
             vprint("User wanted LIST")
         elif command == "DWLD":
             vprint("User wanted DWLD")
+            self.download_file()
         elif command == "DELF":
             vprint("User wanted DELF")
         elif command == "QUIT":

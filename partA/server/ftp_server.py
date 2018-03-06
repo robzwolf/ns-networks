@@ -70,11 +70,10 @@ class FTPServer:
             self.handle_hello()
         elif command == "UPLD":
             self.handle_upload()
-            pass
         elif command == "LIST":
             pass
         elif command == "DWLD":
-            pass
+            self.handle_download()
         elif command == "DELF":
             pass
         elif command == "QUIT":
@@ -100,17 +99,30 @@ class FTPServer:
         :param data: The data to send, as bytes
         :param data_length_size: Either "long" or "short" to specify whether the data length is given as 4 or 2 bytes
         """
-        if data_length_size == "long":
-            bytes_length = 4
-        elif data_length_size == "short":
+
+        # Send the data length
+        self.send_data_number(len(data), data_length_size)
+
+        # Send the data itself
+        if type(data) != bytes:
+            data = bytes(data, "utf-8")
+        self.connection.sendall(data)
+
+    def send_data_number(self, number, data_length_size):
+        """
+        Sends a number to the client. Encodes it as char bytes.
+        :param number: The number to send
+        :param byte_length: Either "short" or "long" to specify whether to encode the number as 2 or 4 bytes
+        """
+        if data_length_size == "short":
             bytes_length = 2
+        elif data_length_size == "long":
+            bytes_length = 4
         else:
             vprint("Invalid data_length_size parameter: {}".format(data_length_size))
             return False
-        data_length = len(data).to_bytes(bytes_length, "big")
-        if type(data) != bytes:
-            data = bytes(data, "utf-8")
-        self.connection.sendall(data_length + data)
+        encoded_number = number.to_bytes(bytes_length, "big", signed=True)
+        self.connection.sendall(encoded_number)
 
     def receive_data(self, variable_length_response=True, data_length_size="long"):
         """
@@ -127,7 +139,7 @@ class FTPServer:
             vprint("Invalid data_length_size parameter: {}".format(data_length_size))
             return b""
         if variable_length_response:
-            response_length = int.from_bytes(self.connection.recv(receive_length), "big")
+            response_length = int.from_bytes(self.connection.recv(receive_length), "big", signed=True)
             response = self.connection.recv(response_length)
         else:
             response = self.connection.recv(receive_length)
@@ -174,8 +186,41 @@ class FTPServer:
 
         self.listen_for_command()
 
-    def handle_download(self, data_1):
-        file_name = data_1.decode("utf-8")
+    def handle_download(self):
+        """
+        Receives a download request from the client.
+        """
+        # Receive the file name
+        file_name = self.receive_data(data_length_size="short").decode("utf-8")
+        vprint("Received file name: {}".format(file_name))
+
+        file_exists = os.path.isfile(file_name)
+        vprint("{} exists: {}".format(file_name, file_exists))
+        if file_exists:
+            # Send the file size
+            file_size = os.path.getsize(file_name)
+            vprint("File size: {}".format(file_size))
+            self.send_data_number(file_size, "long")
+
+            # Read the file contents and send them
+            try:
+                with open(file_name, "rb") as binary_file:
+                    # Read the whole file at once
+                    file_contents = binary_file.read()
+                    vprint("Printing file contents... {}".format(file_contents))
+
+                    # Send the file contents using connection.sendall as we have already sent the data length
+                    self.connection.sendall(file_contents)
+            except FileNotFoundError as e:
+                vprint(e)
+                print("Error: File '{}' not found.".format(file_name))
+
+        else:
+            # Send a -1
+            print("Error: Client requested to download a file that does not exist.")
+            self.send_data_number(-1, "long")
+
+        self.listen_for_command()
 
     def handle_quit(self):
         print("Client disconnected.")
