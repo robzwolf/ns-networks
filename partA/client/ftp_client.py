@@ -195,6 +195,10 @@ class FTPClient:
             results = "Received {} ({} bytes).".format(file_name, len(file_contents))
             print(results.replace("Received", "Downloaded"))
 
+    def list_files(self):
+        # Send the command
+        self.send_command("LIST")
+
     def menu(self):
         print()
         print("#########################################")
@@ -217,6 +221,7 @@ class FTPClient:
             self.upload_file()
         elif command == "LIST":
             vprint("User wanted LIST")
+            self.list_files()
         elif command == "DWLD":
             vprint("User wanted DWLD")
             self.download_file()

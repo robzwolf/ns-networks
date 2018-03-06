@@ -71,7 +71,7 @@ class FTPServer:
         elif command == "UPLD":
             self.handle_upload()
         elif command == "LIST":
-            pass
+            self.handle_list()
         elif command == "DWLD":
             self.handle_download()
         elif command == "DELF":
@@ -221,6 +221,12 @@ class FTPServer:
             self.send_data_number(-1, "long")
 
         self.listen_for_command()
+
+    def handle_list(self):
+        """
+        Sends a list of files in the current working directory to the client.
+        """
+        vprint(os.listdir())
 
     def handle_quit(self):
         print("Client disconnected.")
