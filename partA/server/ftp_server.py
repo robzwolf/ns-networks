@@ -58,6 +58,8 @@ class FTPServer:
             vprint("Invalid data_length_size parameter: {}".format(data_length_size))
             return False
         data_length = len(data).to_bytes(bytes_length, "big")
+        if type(data) != bytes:
+            data = bytes(data, "utf-8")
         self.connection.sendall(data_length + data)
 
     def receive_data(self, variable_length_response=True, data_length_size="long"):
@@ -85,13 +87,43 @@ class FTPServer:
         """
         Handles the HELO command by sending back the HELLO_CHECK message.
         """
-        data = self.receive_data(True, "short")
+        data = self.receive_data(True)
         if data != HELLO_CHECK:
             vprint("HELLO_CHECK mismatch. Expected '{}' but received '{}'".format(HELLO_CHECK, data))
             self.send_data(b"MISMATCH", "long")
         else:
             vprint("HELLO_CHECK match.")
             self.send_data(HELLO_CHECK, "long")
+
+        self.listen_for_command()
+
+    def handle_upload(self):
+        """
+        Receives an upload request from the client.
+        """
+        # Receive the file name
+        file_name = self.receive_data(data_length_size="short").decode("utf-8")
+        vprint("Received file name: {}".format(file_name))
+
+        # Acknowledge that we're ready to receive the file contents
+        self.send_data("READY FOR UPLOAD")
+        vprint("Acknowledging ready for upload...")
+
+        # Receive the file contents
+        file_contents = self.receive_data(data_length_size="long")
+        vprint("Received file contents, size {} bytes".format(len(file_contents)))
+
+        # Write the file contents to disk
+        with open(file_name, "wb") as binary_file:
+            binary_file.write(file_contents)
+        results = "Received {} ({} bytes).".format(file_name, len(file_contents))
+        print(results)
+
+        # Send back transfer process results
+        self.send_data(results)
+
+        self.listen_for_command()
+
 
     # def handle_upload(self, data_1):
     #     file_name = data_1.decode("utf-8")
@@ -135,30 +167,40 @@ class FTPServer:
         # Listen for incoming connections
         self.sock.listen(1)
 
+        # Get connection
         while True:
-            # Get connection
             print("Waiting for a connection...")
             self.connection, client_address = self.sock.accept()
             vprint("Connection from {}".format(client_address))
+            break
 
+        self.listen_for_command()
+
+    def listen_for_command(self):
+        # Once we have the connection
+        while True:
+            print("Waiting for command...")
             # Receive the command
             command = self.receive_command()
             vprint("Received command: {!r}".format(command))
+            break
 
-            if command == "HELO":
-                self.handle_hello()
-            elif command == "UPLD":
-                pass
-            elif command == "LIST":
-                pass
-            elif command == "DWLD":
-                pass
-            elif command == "DELF":
-                pass
+        if command == "HELO":
+            self.handle_hello()
+        elif command == "UPLD":
+            self.handle_upload()
+            pass
+        elif command == "LIST":
+            pass
+        elif command == "DWLD":
+            pass
+        elif command == "DELF":
+            pass
 
             # Close the connection
-            self.close_connection()
+            # self.close_connection()
 
+        # self.listen_for_command()
 
     # def start_listening(self):
     #

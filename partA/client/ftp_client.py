@@ -66,29 +66,47 @@ class FTPClient:
         Sends a four-character command to the server.
         :param command: The command as a four-byte string, e.g. b"UPLD"
         """
+        if type(command) != bytes:
+            command = bytes(command, "utf-8")
         self.sock.sendall(command)
 
-    # The following method also exists in the client
-    def send_data(self, data):
+    def send_data(self, data, data_length_size="long"):
         """
         Sends variable-length data to the server.
         :param data: The data to send, as bytes
+        :param data_length_size: Either "long" or "short" to specify whether the data length is given as 4 or 2 bytes
         """
-        data_length = len(data).to_bytes(2, "big")
+        if data_length_size == "long":
+            bytes_length = 4
+        elif data_length_size == "short":
+            bytes_length = 2
+        else:
+            vprint("Invalid data_length_size parameter: {}".format(data_length_size))
+            return False
+        if type(data) != bytes:
+            data = bytes(data, "utf-8")
+        data_length = len(data).to_bytes(bytes_length, "big")
         self.sock.sendall(data_length + data)
 
-    # The following method also exists in the client
-    def receive_data(self, variable_length_response):
+    def receive_data(self, variable_length_response=True, data_length_size="long"):
         """
         Receive data from the server, either of fixed or variable length.
         :param variable_length_response: Whether the response is of variable length or fixed (4 bytes)
+        :param data_length_size: Either "long" or "short" to specify whether the data length is given as 4 or 2 bytes
         :return: The response data from the server
         """
+        if data_length_size == "long":
+            receive_length = 4
+        elif data_length_size == "short":
+            receive_length = 2
+        else:
+            vprint("Invalid data_length_size parameter: {}".format(data_length_size))
+            return b""
         if variable_length_response:
-            response_length = int.from_bytes(self.sock.recv(4), "big")
+            response_length = int.from_bytes(self.sock.recv(receive_length), "big")
             response = self.sock.recv(response_length)
         else:
-            response = self.sock.recv(4)
+            response = self.sock.recv(receive_length)
         return response
 
     # def send_data(self, command, data_1=None, data_2=None, expect_two_responses=False):
@@ -216,24 +234,40 @@ class FTPClient:
                 with open(file_name, "rb") as binary_file:
                     # Read the whole file at once
                     file_contents = binary_file.read()
-                    vprint("Print file contents...")
-                    vprint(file_contents)
+                    vprint("Printing file contents... {}".format(file_contents))
+                    # vprint(file_contents)
 
-                # Upload the file name
-                response = self.send_data("UPLD", bytes(file_name, "utf-8"))[0]
-                vprint("response from original UPLD = {}".format(response))
+                # Upload the command and file name
+                vprint("Sending command")
+                self.send_command("UPLD")
+                vprint("Sending file name")
+                self.send_data(file_name, "short")
+                vprint("Receiving acknowledgement")
+                response = self.receive_data()
+                # response = self.send_data("UPLD", bytes(file_name, "utf-8"))[0]
+                vprint("UPLD mid acknowledgement = {}".format(response))
                 # Check server is ready
                 if response != b"READY FOR UPLOAD":
                     # Handle the non-ready state appropriately, probably just inform the user and try upload again
                     pass
                 else:
                     # Upload the file_contents
-                    # response =
-                    if response[:21] == b"Successfully uploaded":
-                        print("Successfully uploaded {} ({} bytes).".format(file_name, len(file_contents)))
+                    self.send_data(file_contents, "long")
+
+                    # Get the transfer process results
+                    response = self.receive_data().decode("utf-8")
+
+                    if response[:9+len(file_name)] == "Received " + file_name:
+                        # Response is the results
+                        print(response)
                     else:
-                        vprint("Unsuccessful upload - response was: {}".format(response))
-                        print("Upload not successful.")
+                        # Something went wrong
+                        print("Error during upload: {}".format(response))
+                #     if response[:21] == b"Successfully uploaded":
+                #         print("Successfully uploaded {} ({} bytes).".format(file_name, len(file_contents)))
+                #     else:
+                #         vprint("Unsuccessful upload - response was: {}".format(response))
+                # #         print("Upload not successful.")
             except FileNotFoundError as e:
                 vprint(e)
                 print("Error: File '{}' not found.".format(file_name))
