@@ -29,11 +29,15 @@ class FTPServer:
     def __init__(self):
         vprint("FTPServer constructor was called")
 
+        self.sock = None
+        self.connection = None
+        self.initialise_socket()
+
+    def initialise_socket(self):
         # Create a TCP/IP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         vprint(self.sock)
         vprint("Made socket")
-        self.connection = None
         vprint("Defined self.connection")
 
     def receive_command(self):
@@ -94,7 +98,7 @@ class FTPServer:
         else:
             vprint("HELLO_CHECK match.")
             self.send_data(HELLO_CHECK, "long")
-
+        print("Connected to client.")
         self.listen_for_command()
 
     def handle_upload(self):
@@ -161,7 +165,7 @@ class FTPServer:
     def listen(self):
         # Bind the socket to the port
         server_address = ("", PORT)
-        print("Server now listening on {} port {}".format(*self.sock.getsockname(), PORT))
+        print("Server now listening on port {}".format(PORT))
         self.sock.bind(server_address)
 
         # Listen for incoming connections
@@ -196,11 +200,19 @@ class FTPServer:
             pass
         elif command == "DELF":
             pass
+        elif command == "QUIT":
+            self.handle_quit()
 
             # Close the connection
             # self.close_connection()
 
         # self.listen_for_command()
+
+    def handle_quit(self):
+        print("Client disconnected.")
+        self.close_connection()
+        self.initialise_socket()
+        self.listen()
 
     # def start_listening(self):
     #

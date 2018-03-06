@@ -185,9 +185,18 @@ class FTPClient:
     #     else:
     #         return response_1, None
 
+    def quit(self):
+        print("Quitting...")
+        if IS_CONNECTED:
+            self.send_command("QUIT")
+            self.close_connection()
+        sys.exit(0)
+
     def close_connection(self):
         vprint("Closing socket...")
         self.sock.close()
+        global IS_CONNECTED
+        IS_CONNECTED = False
         vprint("Connection closed.")
 
     def menu(self):
@@ -218,8 +227,11 @@ class FTPClient:
             vprint("User wanted DELF")
         elif command == "QUIT":
             vprint("User wanted QUIT")
-            self.close_connection()
-            return -1
+            # self.close_connection()
+            self.quit()
+
+            # # Break out of the menu (while True) loop
+            # return False
         else:
             print("Command '{}' not recognised.".format(command))
 
@@ -259,7 +271,7 @@ class FTPClient:
 
                     if response[:9+len(file_name)] == "Received " + file_name:
                         # Response is the results
-                        print(response)
+                        print(response.replace("Received", "Successfully uploaded"))
                     else:
                         # Something went wrong
                         print("Error during upload: {}".format(response))
@@ -308,9 +320,7 @@ def main():
 
     # Start menu
     while True:
-        # try:
-        if client.menu() == -1:
-            sys.exit(0)
+        client.menu()
 
 
 if __name__ == "__main__":
