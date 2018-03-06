@@ -1,5 +1,5 @@
 # ftp_client.py
-
+import json
 import socket
 import sys
 import argparse
@@ -198,6 +198,15 @@ class FTPClient:
     def list_files(self):
         # Send the command
         self.send_command("LIST")
+
+        # Receive the list of files
+        files = json.loads(self.receive_data(data_length_size="long").decode("utf-8"))
+
+        vprint("Received files list: {}".format(files))
+
+        print("\nFiles/folders in directory are:")
+        for item in files:
+            print(" - {}".format(item))
 
     def menu(self):
         print()

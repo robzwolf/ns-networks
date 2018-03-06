@@ -1,5 +1,5 @@
 # ftp_server.py
-
+import json
 import socket
 import sys
 import argparse
@@ -226,7 +226,14 @@ class FTPServer:
         """
         Sends a list of files in the current working directory to the client.
         """
-        vprint(os.listdir())
+        print("Client requested list of files in directory.")
+        files = json.dumps(os.listdir())
+        vprint(files)
+
+        # Send the list of files as JSON
+        self.send_data(files, "long")
+
+        self.listen_for_command()
 
     def handle_quit(self):
         print("Client disconnected.")
