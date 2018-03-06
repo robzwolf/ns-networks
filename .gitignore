@@ -16,3 +16,8 @@ partA/server/local_files/short_text_file.txt
 partA/client/shortTextFile.txt
 partA/client/SmallFile.txt
 partA/client/MediumFile.pdf
+partA/server/shortTextFile.txt
+partA/server/MediumFile.pdf
+partA/server/LargeFile.mp4
+partA/client/LargeFile.mp4
+partA/server/SmallFile.txt

@@ -90,7 +90,9 @@ class FTPServer:
         Receives a 4-byte command
         :return: A 4-character string
         """
-        command = self.connection.recv(4).decode("utf-8")
+        command_raw = self.connection.recv(4)
+        vprint("command_raw = {}".format(command_raw))
+        command = command_raw.decode("utf-8")
         return command
 
     def send_data(self, data, data_length_size="long"):
@@ -184,6 +186,7 @@ class FTPServer:
         # Send back transfer process results
         self.send_data(results)
 
+        vprint("Calling self.listen_for_command() from self.handle_upload()")
         self.listen_for_command()
 
     def handle_download(self):
