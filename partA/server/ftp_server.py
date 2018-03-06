@@ -39,6 +39,53 @@ class FTPServer:
         vprint("Made socket")
         vprint("Defined self.connection")
 
+    def listen(self):
+        # Bind the socket to the port
+        server_address = ("", PORT)
+        print("Server now listening on port {}".format(PORT))
+        self.sock.bind(server_address)
+
+        # Listen for incoming connections
+        self.sock.listen(1)
+
+        # Get connection
+        while True:
+            print("Waiting for a connection...")
+            self.connection, client_address = self.sock.accept()
+            vprint("Connection from {}".format(client_address))
+            break
+
+        self.listen_for_command()
+
+    def listen_for_command(self):
+        # Once we have the connection
+        while True:
+            print("Waiting for command...")
+            # Receive the command
+            command = self.receive_command()
+            vprint("Received command: {!r}".format(command))
+            break
+
+        if command == "HELO":
+            self.handle_hello()
+        elif command == "UPLD":
+            self.handle_upload()
+            pass
+        elif command == "LIST":
+            pass
+        elif command == "DWLD":
+            pass
+        elif command == "DELF":
+            pass
+        elif command == "QUIT":
+            self.handle_quit()
+
+    def close_connection(self):
+        vprint("Cleaning up connection...")
+        # Clean up the connection
+        self.connection.close()
+        vprint("Closed connection.")
+
     def receive_command(self):
         """
         Receives a 4-byte command
@@ -130,58 +177,11 @@ class FTPServer:
     def handle_download(self, data_1):
         file_name = data_1.decode("utf-8")
 
-    def listen(self):
-        # Bind the socket to the port
-        server_address = ("", PORT)
-        print("Server now listening on port {}".format(PORT))
-        self.sock.bind(server_address)
-
-        # Listen for incoming connections
-        self.sock.listen(1)
-
-        # Get connection
-        while True:
-            print("Waiting for a connection...")
-            self.connection, client_address = self.sock.accept()
-            vprint("Connection from {}".format(client_address))
-            break
-
-        self.listen_for_command()
-
-    def listen_for_command(self):
-        # Once we have the connection
-        while True:
-            print("Waiting for command...")
-            # Receive the command
-            command = self.receive_command()
-            vprint("Received command: {!r}".format(command))
-            break
-
-        if command == "HELO":
-            self.handle_hello()
-        elif command == "UPLD":
-            self.handle_upload()
-            pass
-        elif command == "LIST":
-            pass
-        elif command == "DWLD":
-            pass
-        elif command == "DELF":
-            pass
-        elif command == "QUIT":
-            self.handle_quit()
-
     def handle_quit(self):
         print("Client disconnected.")
         self.close_connection()
         self.initialise_socket()
         self.listen()
-
-    def close_connection(self):
-        vprint("Cleaning up connection...")
-        # Clean up the connection
-        self.connection.close()
-        vprint("Closed connection.")
 
 
 def main():

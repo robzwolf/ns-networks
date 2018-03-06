@@ -25,34 +25,6 @@ class FTPClient:
         vprint("FTPClient() constructor called")
         self.sock = None
 
-    def make_connection(self):
-        """
-        Makes a connection to the server by sending a short hello message and checking the response is the same.
-        """
-        global IS_CONNECTED
-        vprint("IS_CONNECTED = {}".format(IS_CONNECTED))
-
-        # Connect the socket to the port where the server is listening
-        # Create a TCP/IP socket
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_address = ("", PORT)
-        vprint("Connecting to server on port {}".format(PORT))
-        self.sock.connect(server_address)
-
-        if not IS_CONNECTED:
-            self.send_command(b"HELO")
-            print("Made initial connection to server on port " + str(PORT) + "...")
-            self.send_data(HELLO_CHECK)
-            response = self.receive_data(variable_length_response=True)
-            if response != HELLO_CHECK:
-                vprint("HELLO_CHECK mismatch! Expected '{}' but got '{}'.".format(HELLO_CHECK, response))
-            else:
-                vprint("HELO matched correctly.")
-                print("Successfully connected to server.")
-                IS_CONNECTED = True
-        else:
-            print("Already connected to server.")
-
     def send_command(self, command):
         """
         Sends a four-character command to the server.
@@ -101,6 +73,34 @@ class FTPClient:
             response = self.sock.recv(receive_length)
         return response
 
+    def make_connection(self):
+        """
+        Makes a connection to the server by sending a short hello message and checking the response is the same.
+        """
+        global IS_CONNECTED
+        vprint("IS_CONNECTED = {}".format(IS_CONNECTED))
+
+        # Connect the socket to the port where the server is listening
+        # Create a TCP/IP socket
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_address = ("", PORT)
+        vprint("Connecting to server on port {}".format(PORT))
+        self.sock.connect(server_address)
+
+        if not IS_CONNECTED:
+            self.send_command(b"HELO")
+            print("Made initial connection to server on port " + str(PORT) + "...")
+            self.send_data(HELLO_CHECK)
+            response = self.receive_data(variable_length_response=True)
+            if response != HELLO_CHECK:
+                vprint("HELLO_CHECK mismatch! Expected '{}' but got '{}'.".format(HELLO_CHECK, response))
+            else:
+                vprint("HELO matched correctly.")
+                print("Successfully connected to server.")
+                IS_CONNECTED = True
+        else:
+            print("Already connected to server.")
+
     def quit(self):
         print("Quitting...")
         if IS_CONNECTED:
@@ -114,6 +114,51 @@ class FTPClient:
         global IS_CONNECTED
         IS_CONNECTED = False
         vprint("Connection closed.")
+
+    def upload_file(self):
+        if not IS_CONNECTED:
+            print("Error: You are not connected to the server. Use CONN command first.")
+        else:
+            # Do some upload stuff
+            file_name = input("Enter the name of the file to upload: ")
+            vprint("User wanted to upload '{}'".format(file_name))
+            try:
+                with open(file_name, "rb") as binary_file:
+                    # Read the whole file at once
+                    file_contents = binary_file.read()
+                    vprint("Printing file contents... {}".format(file_contents))
+
+                # Upload the command and file name
+                vprint("Sending command")
+                self.send_command("UPLD")
+                vprint("Sending file name")
+                self.send_data(file_name, "short")
+
+                # Get the acknowledgement
+                vprint("Receiving acknowledgement")
+                response = self.receive_data().decode("utf-8")
+                vprint("UPLD mid acknowledgement = {}".format(response))
+
+                # Check server is ready
+                if response != "READY FOR UPLOAD":
+                    # Handle the non-ready state appropriately, probably just inform the user and try upload again
+                    pass
+                else:
+                    # Upload the file_contents
+                    self.send_data(file_contents, "long")
+
+                    # Get the transfer process results
+                    response = self.receive_data().decode("utf-8")
+
+                    if response[:9+len(file_name)] == "Received " + file_name:
+                        # Response is basically the results
+                        print(response.replace("Received", "Successfully uploaded"))
+                    else:
+                        # Something went wrong
+                        print("Error during upload: {}".format(response))
+            except FileNotFoundError as e:
+                vprint(e)
+                print("Error: File '{}' not found.".format(file_name))
 
     def menu(self):
         print()
@@ -146,51 +191,6 @@ class FTPClient:
             self.quit()
         else:
             print("Command '{}' not recognised.".format(command))
-
-    def upload_file(self):
-        if not IS_CONNECTED:
-            print("Error: You are not connected to the server. Use CONN command first.")
-        else:
-            # Do some upload stuff
-            file_name = input("Enter the name of the file to upload: ")
-            vprint("User wanted to upload '{}'".format(file_name))
-            try:
-                with open(file_name, "rb") as binary_file:
-                    # Read the whole file at once
-                    file_contents = binary_file.read()
-                    vprint("Printing file contents... {}".format(file_contents))
-
-                # Upload the command and file name
-                vprint("Sending command")
-                self.send_command("UPLD")
-                vprint("Sending file name")
-                self.send_data(file_name, "short")
-
-                # Get the acknowledgement
-                vprint("Receiving acknowledgement")
-                response = self.receive_data()
-                vprint("UPLD mid acknowledgement = {}".format(response))
-
-                # Check server is ready
-                if response != b"READY FOR UPLOAD":
-                    # Handle the non-ready state appropriately, probably just inform the user and try upload again
-                    pass
-                else:
-                    # Upload the file_contents
-                    self.send_data(file_contents, "long")
-
-                    # Get the transfer process results
-                    response = self.receive_data().decode("utf-8")
-
-                    if response[:9+len(file_name)] == "Received " + file_name:
-                        # Response is basically the results
-                        print(response.replace("Received", "Successfully uploaded"))
-                    else:
-                        # Something went wrong
-                        print("Error during upload: {}".format(response))
-            except FileNotFoundError as e:
-                vprint(e)
-                print("Error: File '{}' not found.".format(file_name))
 
 
 def main():
