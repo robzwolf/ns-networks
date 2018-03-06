@@ -13,3 +13,6 @@ partA/client/__pycache__/
 partA/server/__pycache__/
 partA/client/local_files/short_text_file.txt
 partA/server/local_files/short_text_file.txt
+partA/client/shortTextFile.txt
+partA/client/SmallFile.txt
+partA/client/MediumFile.pdf

@@ -1,7 +1,7 @@
 # ftp_server.py
+
 import json
 import socket
-import sys
 import argparse
 import os
 
@@ -42,7 +42,7 @@ class FTPServer:
     def listen(self):
         # Bind the socket to the port
         server_address = ("", PORT)
-        print("Server now listening on port {}".format(PORT))
+        print("Server listening on port {}".format(PORT))
         self.sock.bind(server_address)
 
         # Listen for incoming connections
@@ -247,6 +247,7 @@ class FTPServer:
         vprint("{} exists: {}".format(file_name, file_exists))
 
         if file_exists:
+            print("Client requested to delete '{}', awaiting confirmation...".format(file_name))
             self.send_data_number(1, "long")
 
             # Get confirmation from the user to delete the file
@@ -264,6 +265,7 @@ class FTPServer:
                 vprint("Received invalid confirmation: {}".format(confirmation))
                 pass
         else:
+            print("Client requested to delete '{}', but it was not found on the server.".format(file_name))
             self.send_data_number(-1, "long")
 
         self.listen_for_command()

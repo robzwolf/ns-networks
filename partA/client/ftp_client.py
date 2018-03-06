@@ -1,4 +1,5 @@
 # ftp_client.py
+
 import json
 import socket
 import sys
@@ -28,7 +29,7 @@ class FTPClient:
     def send_command(self, command):
         """
         Sends a four-character command to the server.
-        :param command: The command as a four-byte string, e.g. b"UPLD"
+        :param command: The command as a four-character string, e.g. "UPLD"
         """
         if type(command) != bytes:
             command = bytes(command, "utf-8")
@@ -89,7 +90,7 @@ class FTPClient:
 
         if not IS_CONNECTED:
             self.send_command(b"HELO")
-            print("Made initial connection to server on port " + str(PORT) + "...")
+            vprint("Made initial connection to server on port " + str(PORT) + "...")
             self.send_data(HELLO_CHECK)
             response = self.receive_data(variable_length_response=True)
             if response != HELLO_CHECK:
@@ -100,13 +101,6 @@ class FTPClient:
                 IS_CONNECTED = True
         else:
             print("Already connected to server.")
-
-    def quit(self):
-        print("Quitting...")
-        if IS_CONNECTED:
-            self.send_command("QUIT")
-            self.close_connection()
-        sys.exit(0)
 
     def close_connection(self):
         vprint("Closing socket...")
@@ -217,7 +211,7 @@ class FTPClient:
             print("Error: You are not connected to the server. Use CONN command first.")
             return
 
-        file_name = input("Enter the name of the remote file to download: ")
+        file_name = input("Enter the name of the remote file to delete: ")
         vprint("User wanted to delete '{}'".format(file_name))
 
         # Send the command and file name
@@ -247,6 +241,13 @@ class FTPClient:
         vprint("confirmation = {}".format(confirmation))
 
         self.send_data(confirmation, "long")
+
+    def quit(self):
+        print("Quitting...")
+        if IS_CONNECTED:
+            self.send_command("QUIT")
+            self.close_connection()
+        sys.exit(0)
 
     def menu(self):
         print()
