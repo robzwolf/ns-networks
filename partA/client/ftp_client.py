@@ -196,6 +196,10 @@ class FTPClient:
             print(results.replace("Received", "Downloaded"))
 
     def list_files(self):
+        if not IS_CONNECTED:
+            print("Error: You are not connected to the server. Use CONN command first.")
+            return
+
         # Send the command
         self.send_command("LIST")
 
@@ -208,10 +212,46 @@ class FTPClient:
         for item in files:
             print(" - {}".format(item))
 
+    def delete_file(self):
+        if not IS_CONNECTED:
+            print("Error: You are not connected to the server. Use CONN command first.")
+            return
+
+        file_name = input("Enter the name of the remote file to download: ")
+        vprint("User wanted to delete '{}'".format(file_name))
+
+        # Send the command and file name
+        vprint("Sending DELF command")
+        self.send_command("DELF")
+        vprint("Sending file name")
+        self.send_data(file_name, "short")
+
+        file_exists_num = int.from_bytes(self.receive_data(False, "long"), "big", signed=True)
+        if file_exists_num == 1:
+            file_exists = True
+        elif file_exists_num == -1:
+            file_exists = False
+            print("The file does not exist on the server.")
+            return
+        else:
+            # Abort
+            return
+
+        vprint("file_exists = {}".format(file_exists))
+
+        # Ask the user for confirmation
+        confirmation = ""
+        while confirmation != "Y" and confirmation != "N":
+            confirmation = input("Are you sure you want to delete '{}'? [Y/N]: ".format(file_name)).upper()
+
+        vprint("confirmation = {}".format(confirmation))
+
+        self.send_data(confirmation, "long")
+
     def menu(self):
         print()
         print("#########################################")
-        print("## Status: {}".format("Connected to server " if IS_CONNECTED else "Not connected to server"))
+        print("   Status: {}\n".format("Connected to server " if IS_CONNECTED else "Not connected to server"))
         print("## FTP Client Menu ##")
         print("   CONN - connect to server")
         print("   UPLD - upload a file to the server")
@@ -236,6 +276,7 @@ class FTPClient:
             self.download_file()
         elif command == "DELF":
             vprint("User wanted DELF")
+            self.delete_file()
         elif command == "QUIT":
             vprint("User wanted QUIT")
             self.quit()

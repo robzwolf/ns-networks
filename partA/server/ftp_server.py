@@ -75,7 +75,7 @@ class FTPServer:
         elif command == "DWLD":
             self.handle_download()
         elif command == "DELF":
-            pass
+            self.handle_delete()
         elif command == "QUIT":
             self.handle_quit()
 
@@ -232,6 +232,39 @@ class FTPServer:
 
         # Send the list of files as JSON
         self.send_data(files, "long")
+
+        self.listen_for_command()
+
+    def handle_delete(self):
+        """
+        Deletes a file from the server.
+        """
+        # Receive the file name
+        file_name = self.receive_data(data_length_size="short").decode("utf-8")
+        vprint("Received file name: {}".format(file_name))
+
+        file_exists = os.path.isfile(file_name)
+        vprint("{} exists: {}".format(file_name, file_exists))
+
+        if file_exists:
+            self.send_data_number(1, "long")
+
+            # Get confirmation from the user to delete the file
+            confirmation = self.receive_data(data_length_size="long").decode("utf-8")
+            vprint("User confirmation = {}".format(confirmation))
+
+            if confirmation == "Y":
+                # Delete the file
+                os.remove(file_name)
+                print("Deleted {}.".format(file_name))
+            elif confirmation == "N":
+                print("Client aborted file delete.")
+            else:
+                # Give up
+                vprint("Received invalid confirmation: {}".format(confirmation))
+                pass
+        else:
+            self.send_data_number(-1, "long")
 
         self.listen_for_command()
 
