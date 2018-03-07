@@ -12,6 +12,7 @@ VALID_COMMANDS = ["HELO", "UPLD", "LIST", "DWLD", "DELF", "QUIT"]
 SINGLE_OPTION_COMMANDS = ["LIST", "DWLD", "DELF"]
 ACKNOWLEDGEMENT_NEEDED_COMMANDS = ["HELO", "UPLD"]
 NO_OPTION_COMMANDS = ["QUIT"]
+SOCKET_BUFFER_SIZE = 1024
 
 # Global variables
 VERBOSE_PRINT = False
@@ -142,7 +143,25 @@ class FTPServer:
             return b""
         if variable_length_response:
             response_length = int.from_bytes(self.connection.recv(receive_length), "big", signed=True)
-            response = self.connection.recv(response_length)
+            vprint("response_length = {}".format(response_length))
+
+            # Loop through and receive the response in chunks
+            amount_received = 0
+            response = b""
+
+            vprint("Will read {} bytes {} times".format(SOCKET_BUFFER_SIZE, response_length // SOCKET_BUFFER_SIZE))
+            for i in range(response_length // SOCKET_BUFFER_SIZE):
+                data = self.connection.recv(SOCKET_BUFFER_SIZE)
+                amount_received += len(data)
+                response += data
+            vprint("Will now read final {} bytes".format(response_length % SOCKET_BUFFER_SIZE))
+            data = self.connection.recv(response_length % SOCKET_BUFFER_SIZE)
+            amount_received += len(data)
+            response += data
+
+            vprint("(response_length = {}, amount_received = {}, len(response) = {})".format(response_length,
+                                                                                             amount_received,
+                                                                                             len(response)))
         else:
             response = self.connection.recv(receive_length)
         return response

@@ -8,6 +8,7 @@ import argparse
 # Constants
 DEFAULT_PORT = 1337
 HELLO_CHECK = b"Successfully connected to server!"
+SOCKET_BUFFER_SIZE = 1024
 
 # Global variables
 VERBOSE_PRINT = False
@@ -51,25 +52,55 @@ class FTPClient:
         if type(data) != bytes:
             data = bytes(data, "utf-8")
         data_length = len(data).to_bytes(bytes_length, "big", signed=True)
-        self.sock.sendall(data_length + data)
+        vprint("data_length = {}".format(data_length))
+        # Send the data length
+        self.sock.sendall(data_length)
 
-    def receive_data(self, variable_length_response=True, data_length_size="long"):
+        # Send the data
+        self.sock.sendall(data)
+
+    def receive_data(self, variable_length_response=True, data_length_size="long", receive_length_specific=None):
         """
         Receive data from the server, either of fixed or variable length.
         :param variable_length_response: Whether the response is of variable length or fixed (4 bytes)
         :param data_length_size: Either "long" or "short" to specify whether the data length is given as 4 or 2 bytes
+        :param receive_length_specific: If we already know exactly how much data to receive
         :return: The response data from the server
         """
         if data_length_size == "long":
             receive_length = 4
         elif data_length_size == "short":
             receive_length = 2
+        elif data_length_size == "none":
+            receive_length = 0
         else:
             vprint("Invalid data_length_size parameter: {}".format(data_length_size))
             return b""
         if variable_length_response:
-            response_length = int.from_bytes(self.sock.recv(receive_length), "big", signed=True)
-            response = self.sock.recv(response_length)
+            if receive_length != 0:
+                response_length = int.from_bytes(self.sock.recv(receive_length), "big", signed=True)
+            else:
+                response_length = receive_length_specific
+            vprint("response_length = {}".format(response_length))
+
+            # Loop through and receive the response in chunks
+            amount_received = 0
+            response = b""
+
+            vprint("Will read {} bytes {} times".format(SOCKET_BUFFER_SIZE, response_length // SOCKET_BUFFER_SIZE))
+            for i in range(response_length // SOCKET_BUFFER_SIZE):
+                data = self.sock.recv(SOCKET_BUFFER_SIZE)
+                amount_received += len(data)
+                response += data
+            vprint("Will now read final {} bytes".format(response_length % SOCKET_BUFFER_SIZE))
+            data = self.sock.recv(response_length % SOCKET_BUFFER_SIZE)
+            amount_received += len(data)
+            response += data
+
+            vprint("(response_length = {}, amount_received = {}, len(response) = {})".format(response_length,
+                                                                                             amount_received,
+                                                                                             len(response)))
+
         else:
             response = self.sock.recv(receive_length)
         return response
@@ -120,7 +151,8 @@ class FTPClient:
             with open(file_name, "rb") as binary_file:
                 # Read the whole file at once
                 file_contents = binary_file.read()
-                vprint("Printing file contents... {}".format(file_contents))
+                # vprint("Printing file contents... {}".format(file_contents))
+                vprint("len(file_contents) = {}".format(len(file_contents)))
 
             # Send the command and file name
             vprint("Sending UPLD command")
@@ -179,8 +211,10 @@ class FTPClient:
             return
         else:
             # File does exist
-            # Use sock.recv because we already know the data length
-            file_contents = self.sock.recv(file_size)
+            file_contents = self.receive_data(variable_length_response=True,
+                                              data_length_size="none",
+                                              receive_length_specific=file_size)
+            # file_contents = self.sock.recv(file_size)
             vprint("File contents = {}".format(file_contents))
 
             # Write the results to file
