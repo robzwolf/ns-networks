@@ -116,7 +116,7 @@ class FTPServer:
         """
         Sends a number to the client. Encodes it as char bytes.
         :param number: The number to send
-        :param byte_length: Either "short" or "long" to specify whether to encode the number as 2 or 4 bytes
+        :param data_length_size: Either "long" or "short" to specify whether the data length is given as 4 or 2 bytes
         """
         if data_length_size == "short":
             bytes_length = 2
@@ -243,7 +243,6 @@ class FTPServer:
                     vprint("Printing file contents... {}".format(file_contents))
 
                     # Send the file contents using connection.sendall as we have already sent the data length
-                    # print("Sending {} to client...".format(file_name))
                     self.connection.sendall(file_contents)
                     print("Client downloaded {}.".format(file_name))
             except FileNotFoundError as e:
@@ -251,7 +250,7 @@ class FTPServer:
                 print("Error: File '{}' not found.".format(file_name))
 
         else:
-            # Send a -1
+            # Send a -1 to say the file doesn't exist
             print("Error: Client requested to download {} but it does not exist.".format(file_name))
             self.send_data_number(-1, "long")
 
@@ -296,9 +295,8 @@ class FTPServer:
             elif confirmation == "N":
                 print("Client aborted file delete.")
             else:
-                # Give up
+                # Something went wrong
                 vprint("Received invalid confirmation: {}".format(confirmation))
-                pass
         else:
             print("Client requested to delete '{}', but it was not found on the server.".format(file_name))
             self.send_data_number(-1, "long")
@@ -313,7 +311,7 @@ class FTPServer:
 
 
 def main():
-    # Define arguments
+    # Define command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Enable verbose printing", action="store_true")
     parser.add_argument("-p", "--port", help="Specify a port to listen on", type=int)
@@ -325,7 +323,7 @@ def main():
 
     print("Starting server...")
 
-    # Handle arguments
+    # Handle command-line arguments
     if args.verbose:
         VERBOSE_PRINT = True
         vprint("Verbose printing is enabled.")

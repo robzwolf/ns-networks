@@ -50,11 +50,16 @@ class FTPClient:
             bytes_length = 2
         else:
             vprint("Invalid data_length_size parameter: {}".format(data_length_size))
-            return False
+            return
+
+        # Convert the data to bytes if necessary
         if type(data) != bytes:
             data = bytes(data, "utf-8")
+
+        # Calculate the length of the data to send
         data_length = len(data).to_bytes(bytes_length, "big", signed=True)
         vprint("data_length = {}".format(data_length))
+
         # Send the data length
         self.sock.sendall(data_length)
 
@@ -79,6 +84,7 @@ class FTPClient:
             vprint("Invalid data_length_size parameter: {}".format(data_length_size))
             return b""
         if variable_length_response:
+            # If we already know how many bytes to receive, just use `receive_length_specific` as the response length
             if receive_length != 0:
                 response_length = int.from_bytes(self.sock.recv(receive_length), "big", signed=True)
             else:
@@ -100,9 +106,8 @@ class FTPClient:
             response += data
 
             vprint("(response_length = {:,}, amount_received = {:,}, len(response) = {:,})".format(response_length,
-                                                                                             amount_received,
-                                                                                             len(response)))
-
+                                                                                                   amount_received,
+                                                                                                   len(response)))
         else:
             response = self.sock.recv(receive_length)
         return response
@@ -136,6 +141,10 @@ class FTPClient:
             print("Already connected to server.")
 
     def close_connection(self):
+        """
+        Closes the connection to the server and cleans up.
+        :return:
+        """
         vprint("Closing socket...")
         self.sock.close()
         global IS_CONNECTED
@@ -143,6 +152,9 @@ class FTPClient:
         vprint("Connection closed.")
 
     def upload_file(self):
+        """
+        Uploads a file to the server.
+        """
         if not IS_CONNECTED:
             print("Error: You are not connected to the server. Use CONN command first.")
             return
@@ -168,8 +180,9 @@ class FTPClient:
 
             # Check server is ready
             if response != "READY FOR UPLOAD":
-                # Handle the non-ready state appropriately, probably just inform the user and try upload again
+                # Handle the non-ready state appropriately, just inform the user and tell them to try upload again
                 print("Error: Server was not ready for upload. Try again.")
+                vprint("Acknowledgement = {}".format(response))
                 return
             else:
                 # Upload the file_contents
@@ -180,7 +193,7 @@ class FTPClient:
                 response = self.receive_data().decode("utf-8")
 
                 if response[:9+len(file_name)] == "Received " + file_name:
-                    # Response is basically the results
+                    # Response is effectively the results
                     print(response.replace("Received", "Successfully uploaded"))
                 else:
                     # Something went wrong
@@ -190,6 +203,10 @@ class FTPClient:
             print("Error: File '{}' not found.".format(file_name))
 
     def download_file(self):
+        """
+        Downloads a file from the server.
+        :return:
+        """
         if not IS_CONNECTED:
             print("Error: You are not connected to the server. Use CONN command first.")
             return
@@ -206,7 +223,7 @@ class FTPClient:
         vprint("Sending file name")
         self.send_data(file_name, "short")
 
-        # Getting file status (file size or -1 if not exists)
+        # Getting file status (file size or -1 if remote file does not exist)
         file_size_raw = self.receive_data(variable_length_response=False, data_length_size="long")
         file_size = int.from_bytes(file_size_raw, "big", signed=True)
         vprint("File 'size' of '{}' is: {:,}".format(file_name, file_size))
@@ -220,7 +237,6 @@ class FTPClient:
             file_contents = self.receive_data(variable_length_response=True,
                                               data_length_size="none",
                                               receive_length_specific=file_size)
-            # file_contents = self.sock.recv(file_size)
             vprint("File contents = {}".format(file_contents))
 
             # Write the results to file
@@ -231,10 +247,13 @@ class FTPClient:
             t1 = time.time()
             time_diff = round(t1 - t0, 3)
 
-            results = "Received {} ({:,} bytes).".format(file_name, len(file_contents))
-            print(results.replace("Received", "Downloaded")[:-1] + " in {:,} seconds.".format(time_diff))
+            results = "Downloaded {} ({:,} bytes) in {:,} seconds.".format(file_name, len(file_contents), time_diff)
+            print(results)
 
     def list_files(self):
+        """
+        Retrieves a list of files from the current working directory of the server.
+        """
         if not IS_CONNECTED:
             print("Error: You are not connected to the server. Use CONN command first.")
             return
@@ -252,6 +271,9 @@ class FTPClient:
             print(" - {}".format(item))
 
     def delete_file(self):
+        """
+        Deletes a file from the server, prompting the user for confirmation.
+        """
         if not IS_CONNECTED:
             print("Error: You are not connected to the server. Use CONN command first.")
             return
@@ -265,11 +287,12 @@ class FTPClient:
         vprint("Sending file name")
         self.send_data(file_name, "short")
 
-        file_exists_num = int.from_bytes(self.receive_data(False, "long"), "big", signed=True)
+        file_exists_num = int.from_bytes(self.receive_data(variable_length_response=False, data_length_size="long"),
+                                         "big",
+                                         signed=True)
         if file_exists_num == 1:
             file_exists = True
         elif file_exists_num == -1:
-            file_exists = False
             print("The file does not exist on the server.")
             return
         else:
@@ -285,9 +308,14 @@ class FTPClient:
 
         vprint("confirmation = {}".format(confirmation))
 
+        # Send the confirmation to the server
         self.send_data(confirmation, "long")
 
     def quit(self):
+        """
+        Cleans up and exits the application.
+        :return:
+        """
         print("Quitting...")
         if IS_CONNECTED:
             self.send_command("QUIT")
@@ -331,7 +359,7 @@ class FTPClient:
 
 
 def main():
-    # Define arguments
+    # Define command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Enable verbose printing", action="store_true")
     parser.add_argument("-p", "--port", help="Specify a port to connect to", type=int)
@@ -343,7 +371,7 @@ def main():
 
     print("Starting server...")
 
-    # Handle arguments
+    # Handle command-line arguments
     if args.verbose:
         VERBOSE_PRINT = True
         vprint("Verbose printing is enabled.")
