@@ -22,3 +22,8 @@ partA/server/LargeFile.mp4
 partA/client/LargeFile.mp4
 partA/server/SmallFile.txt
 partA/client/LargeFile.mp4.old
+partA/client/MassiveFile.whl
+partA/server/LargerFile.psd
+partA/server/BigFile.JPG
+partA/client/LargerFile.psd
+partA/client/BigFile.JPG

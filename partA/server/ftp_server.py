@@ -4,6 +4,7 @@ import json
 import socket
 import argparse
 import os
+import time
 
 # Constants
 DEFAULT_PORT = 1337
@@ -184,6 +185,9 @@ class FTPServer:
         """
         Receives an upload request from the client.
         """
+        # Start the timer
+        t0 = time.time()
+
         # Receive the file name
         file_name = self.receive_data(data_length_size="short").decode("utf-8")
         vprint("Received file name: {}".format(file_name))
@@ -200,7 +204,12 @@ class FTPServer:
         # Write the file contents to disk
         with open(file_name, "wb") as binary_file:
             binary_file.write(file_contents)
-        results = "Received {} ({:,} bytes).".format(file_name, len(file_contents))
+
+        # Stop the timer
+        t1 = time.time()
+        time_diff = round(t1 - t0, 3)
+
+        results = "Received {} ({:,} bytes) in {:,} seconds.".format(file_name, len(file_contents), time_diff)
         print(results)
 
         # Send back transfer process results

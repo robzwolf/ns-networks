@@ -6,6 +6,8 @@ import sys
 import argparse
 
 # Constants
+import time
+
 DEFAULT_PORT = 1337
 HELLO_CHECK = b"Successfully connected to server!"
 SOCKET_BUFFER_SIZE = 1024
@@ -167,7 +169,8 @@ class FTPClient:
             # Check server is ready
             if response != "READY FOR UPLOAD":
                 # Handle the non-ready state appropriately, probably just inform the user and try upload again
-                pass
+                print("Error: Server was not ready for upload. Try again.")
+                return
             else:
                 # Upload the file_contents
                 print("Uploading {}...".format(file_name))
@@ -193,6 +196,9 @@ class FTPClient:
 
         file_name = input("Enter the name of the remote file to download: ")
         vprint("User wanted to download '{}'".format(file_name))
+
+        # Start the timer
+        t0 = time.time()
 
         # Send the command and file name
         vprint("Sending DWLD command")
@@ -220,8 +226,13 @@ class FTPClient:
             # Write the results to file
             with open(file_name, "wb") as binary_file:
                 binary_file.write(file_contents)
+
+            # Stop the timer
+            t1 = time.time()
+            time_diff = round(t1 - t0, 3)
+
             results = "Received {} ({:,} bytes).".format(file_name, len(file_contents))
-            print(results.replace("Received", "Downloaded"))
+            print(results.replace("Received", "Downloaded")[:-1] + " in {:,} seconds.".format(time_diff))
 
     def list_files(self):
         if not IS_CONNECTED:
