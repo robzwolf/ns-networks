@@ -143,23 +143,23 @@ class FTPServer:
             return b""
         if variable_length_response:
             response_length = int.from_bytes(self.connection.recv(receive_length), "big", signed=True)
-            vprint("response_length = {}".format(response_length))
+            vprint("response_length = {:,}".format(response_length))
 
             # Loop through and receive the response in chunks
             amount_received = 0
             response = b""
 
-            vprint("Will read {} bytes {} times".format(SOCKET_BUFFER_SIZE, response_length // SOCKET_BUFFER_SIZE))
+            vprint("Will read {:,} bytes {:,} times".format(SOCKET_BUFFER_SIZE, response_length // SOCKET_BUFFER_SIZE))
             for i in range(response_length // SOCKET_BUFFER_SIZE):
                 data = self.connection.recv(SOCKET_BUFFER_SIZE)
                 amount_received += len(data)
                 response += data
-            vprint("Will now read final {} bytes".format(response_length % SOCKET_BUFFER_SIZE))
+            vprint("Will now read final {:,} bytes".format(response_length % SOCKET_BUFFER_SIZE))
             data = self.connection.recv(response_length % SOCKET_BUFFER_SIZE)
             amount_received += len(data)
             response += data
 
-            vprint("(response_length = {}, amount_received = {}, len(response) = {})".format(response_length,
+            vprint("(response_length = {:,}, amount_received = {:,}, len(response) = {:,})".format(response_length,
                                                                                              amount_received,
                                                                                              len(response)))
         else:
@@ -193,13 +193,14 @@ class FTPServer:
         vprint("Acknowledging ready for upload...")
 
         # Receive the file contents
+        print("Receiving {}...".format(file_name))
         file_contents = self.receive_data(data_length_size="long")
-        vprint("Received file contents, size {} bytes".format(len(file_contents)))
+        vprint("Received file contents, size {:,} bytes".format(len(file_contents)))
 
         # Write the file contents to disk
         with open(file_name, "wb") as binary_file:
             binary_file.write(file_contents)
-        results = "Received {} ({} bytes).".format(file_name, len(file_contents))
+        results = "Received {} ({:,} bytes).".format(file_name, len(file_contents))
         print(results)
 
         # Send back transfer process results
@@ -215,13 +216,14 @@ class FTPServer:
         # Receive the file name
         file_name = self.receive_data(data_length_size="short").decode("utf-8")
         vprint("Received file name: {}".format(file_name))
+        # print("Client requested to download {}".format(file_name))
 
         file_exists = os.path.isfile(file_name)
         vprint("{} exists: {}".format(file_name, file_exists))
         if file_exists:
             # Send the file size
             file_size = os.path.getsize(file_name)
-            vprint("File size: {}".format(file_size))
+            vprint("File size: {:,}".format(file_size))
             self.send_data_number(file_size, "long")
 
             # Read the file contents and send them
@@ -232,14 +234,16 @@ class FTPServer:
                     vprint("Printing file contents... {}".format(file_contents))
 
                     # Send the file contents using connection.sendall as we have already sent the data length
+                    # print("Sending {} to client...".format(file_name))
                     self.connection.sendall(file_contents)
+                    print("Client downloaded {}.".format(file_name))
             except FileNotFoundError as e:
                 vprint(e)
                 print("Error: File '{}' not found.".format(file_name))
 
         else:
             # Send a -1
-            print("Error: Client requested to download a file that does not exist.")
+            print("Error: Client requested to download {} but it does not exist.".format(file_name))
             self.send_data_number(-1, "long")
 
         self.listen_for_command()

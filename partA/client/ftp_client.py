@@ -87,17 +87,17 @@ class FTPClient:
             amount_received = 0
             response = b""
 
-            vprint("Will read {} bytes {} times".format(SOCKET_BUFFER_SIZE, response_length // SOCKET_BUFFER_SIZE))
+            vprint("Will read {:,} bytes {:,} times".format(SOCKET_BUFFER_SIZE, response_length // SOCKET_BUFFER_SIZE))
             for i in range(response_length // SOCKET_BUFFER_SIZE):
                 data = self.sock.recv(SOCKET_BUFFER_SIZE)
                 amount_received += len(data)
                 response += data
-            vprint("Will now read final {} bytes".format(response_length % SOCKET_BUFFER_SIZE))
+            vprint("Will now read final {:,} bytes".format(response_length % SOCKET_BUFFER_SIZE))
             data = self.sock.recv(response_length % SOCKET_BUFFER_SIZE)
             amount_received += len(data)
             response += data
 
-            vprint("(response_length = {}, amount_received = {}, len(response) = {})".format(response_length,
+            vprint("(response_length = {:,}, amount_received = {:,}, len(response) = {:,})".format(response_length,
                                                                                              amount_received,
                                                                                              len(response)))
 
@@ -151,8 +151,7 @@ class FTPClient:
             with open(file_name, "rb") as binary_file:
                 # Read the whole file at once
                 file_contents = binary_file.read()
-                # vprint("Printing file contents... {}".format(file_contents))
-                vprint("len(file_contents) = {}".format(len(file_contents)))
+                vprint("len(file_contents) = {:,}".format(len(file_contents)))
 
             # Send the command and file name
             vprint("Sending UPLD command")
@@ -171,6 +170,7 @@ class FTPClient:
                 pass
             else:
                 # Upload the file_contents
+                print("Uploading {}...".format(file_name))
                 self.send_data(file_contents, "long")
 
                 # Get the transfer process results
@@ -203,7 +203,7 @@ class FTPClient:
         # Getting file status (file size or -1 if not exists)
         file_size_raw = self.receive_data(variable_length_response=False, data_length_size="long")
         file_size = int.from_bytes(file_size_raw, "big", signed=True)
-        vprint("File 'size' of '{}' is: {}".format(file_name, file_size))
+        vprint("File 'size' of '{}' is: {:,}".format(file_name, file_size))
 
         if file_size == -1:
             # File does not exist
@@ -220,7 +220,7 @@ class FTPClient:
             # Write the results to file
             with open(file_name, "wb") as binary_file:
                 binary_file.write(file_contents)
-            results = "Received {} ({} bytes).".format(file_name, len(file_contents))
+            results = "Received {} ({:,} bytes).".format(file_name, len(file_contents))
             print(results.replace("Received", "Downloaded"))
 
     def list_files(self):
