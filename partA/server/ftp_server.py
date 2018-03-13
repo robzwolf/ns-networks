@@ -43,7 +43,7 @@ class FTPServer:
 
     def listen(self):
         # Bind the socket to the port
-        server_address = ("", PORT)
+        server_address = ("localhost", PORT)
         print("Server listening on port {}".format(PORT))
         self.sock.bind(server_address)
 

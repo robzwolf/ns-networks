@@ -122,7 +122,7 @@ class FTPClient:
         # Connect the socket to the port where the server is listening
         # Create a TCP/IP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_address = ("", PORT)
+        server_address = ("localhost", PORT)
         vprint("Connecting to server on port {}".format(PORT))
         self.sock.connect(server_address)
 
