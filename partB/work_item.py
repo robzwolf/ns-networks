@@ -1,7 +1,8 @@
 class WorkItem():
-    def __init__(self, item_id, data):
+    def __init__(self, item_id, command, data=None):
         print("Created WorkItem {}".format(item_id))
         self.item_id = item_id
+        self.command = command
         self.data = data
         self.result = None
         self.processed_by = None

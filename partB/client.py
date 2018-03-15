@@ -10,15 +10,6 @@ SerializerBase.register_dict_to_class("work_item.WorkItem", WorkItem.from_dict)
 NUMBER_OF_ITEMS = 40
 
 
-def main():
-    print("This program will calculate prime factors of a bunch of random numbers.")
-    print("The more workers you will start on different cores, the faster you will get the complete list of results!")
-    with Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher") as dispatcher:
-        place_work(dispatcher)
-        numbers = collect_results(dispatcher)
-    print_results(numbers)
-
-
 def place_work(dispatcher):
     print("Placing work items into dispatcher queue.")
     for i in range(NUMBER_OF_ITEMS):
@@ -49,6 +40,15 @@ def print_results(numbers):
     print("Computed prime factors follow:")
     for (number, factorials) in numbers.items():
         print("{} --> {}".format(number, factorials))
+
+
+def main():
+    print("This program will calculate prime factors of a bunch of random numbers.")
+    print("The more workers you will start on different cores, the faster you will get the complete list of results!")
+    with Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher") as dispatcher:
+        place_work(dispatcher)
+        numbers = collect_results(dispatcher)
+    print_results(numbers)
 
 
 if __name__ == "__main__":
