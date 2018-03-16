@@ -1,3 +1,4 @@
+import base64
 import os
 import socket
 import sys
@@ -27,12 +28,12 @@ def handle_upload_data(file_name, file_contents, high_reliability):
     :return:
     """
     # Write the file contents to disk
-    with open(file_name, "wb") as binary_file:
+    with open(file_name + "UPLOADED", "wb") as binary_file:
         binary_file.write(file_contents)
 
-    print("Wrote {} ({} bytes) to disk.".format(file_name, len(file_contents)))
+    print("Wrote {} ({:,} bytes) to disk.".format(file_name, len(file_contents)))
 
-    return {"outcome": "Success",
+    return {"outcome": "success",
             "file_name": file_name,
             "file_size": len(file_contents)}
 
@@ -113,15 +114,17 @@ def handle_delete_full(file_name, confirmation):
 
 ## Pyro stuff
 
+
 def process(item):
-    print("Factorising {} --> ".format(item.data))
+    # print("Factorising {} --> ".format(item.data))
     sys.stdout.flush()
     # Handle the work item appropriately, according to its command
+    print("item.command = {}".format(item.command))
     if item.command == "UPLD_INIT":
         item.result = handle_upload_init(item.data["file_name"])
     elif item.command == "UPLD_DATA":
         item.result = handle_upload_data(item.data["file_name"],
-                                         item.data["file_contents"],
+                                         base64.b64decode(item.data["file_contents"]["data"]),
                                          item.data["high_reliability"] if "high_reliability" in item.data else False)
     elif item.command == "LIST":
         item.result = handle_list()
@@ -133,7 +136,7 @@ def process(item):
         item.result = handle_delete_full(item.data["file_name"],
                                          item.data["confirm"])
 
-    print(item.result)
+    print("item.result = {}".format(item.result))
     item.processed_by = WORKER_NAME
 
 
@@ -148,6 +151,7 @@ def main():
             print("No work available yet.")
         else:
             process(item)
+            print("Putting {} in results queue".format(item))
             dispatcher.put_result(item)
 
 

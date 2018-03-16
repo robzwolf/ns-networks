@@ -43,3 +43,13 @@ partB/client/MediumFile.pdf
 partB/server/SmallFile.txt
 partB/client/BigFile.JPG
 partB/__pycache__/work_item.cpython-35.pyc
+partB/SmallFile.txt
+partB/MediumFile.pdf
+partB/MassiveFile.whl
+partB/LargerFile.psd
+partB/LargeFile.mp4
+partB/BigFile.JPG
+*.txtUPLOADED
+*.pdfUPLOADED
+*.psdUPLOADED
+*.mp4UPLOADED

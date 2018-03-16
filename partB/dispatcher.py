@@ -6,7 +6,7 @@ import Pyro4
 from Pyro4.util import SerializerBase
 from work_item import WorkItem
 
-# For 'work_item.Work_Item' we register a deserialisation hook to be able to get these back from Pyro
+# For 'work_item.WorkItem' we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("work_item.WorkItem", WorkItem.from_dict)
 
 
@@ -19,6 +19,7 @@ class DispatcherQueue():
 
     def put_work(self, item):
         self.work_queue.put(item)
+        print(self.work_queue_size())
 
     def get_work(self, timeout=5):
         try:
