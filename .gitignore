@@ -57,3 +57,4 @@ partA/submission/
 partB/__pycache__/
 *.JPGUPLOADED
 *.py___jb_tmp___
+partB/SERVER_FILES_*/
