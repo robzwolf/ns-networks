@@ -1,8 +1,6 @@
-import random
 import sys
 import Pyro4
 from Pyro4.util import SerializerBase
-
 from dispatcher_queue import DispatcherQueue
 from job import Job
 from time import time
@@ -16,38 +14,6 @@ SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", Dispat
 NUMBER_OF_ITEMS = 40
 
 dispatcher = None
-
-
-# def place_work(dispatcher):
-#     print("Placing work items into dispatcher queue.")
-#     for i in range(NUMBER_OF_ITEMS):
-#         number = random.randint(3211, 4999999) * random.randint(3211, 999999)
-#         item = Job(i + 1, number)
-#         dispatcher.put_work(item)
-#
-#
-# def collect_results(dispatcher):
-#     print("Getting results from dispatcher queue.")
-#     numbers = {}
-#     while len(numbers) < NUMBER_OF_ITEMS:
-#         try:
-#             item = dispatcher.get_result()
-#         except ValueError:
-#             print("Not all results available yet (got {} out of {}). Work queue size: {}"
-#                   .format(len(numbers), NUMBER_OF_ITEMS, dispatcher.work_queue_size()))
-#         else:
-#             print("Got result: {} (from {})".format(item, item.processed_by))
-#             numbers[item.data] = item.result
-#
-#     if dispatcher.result_queue_size() > 0:
-#         print("There's still stuff in the dispatcher result queue, that's odd...")
-#     return numbers
-#
-#
-# def print_results(numbers):
-#     print("Computed prime factors follow:")
-#     for (number, factorials) in numbers.items():
-#         print("{} --> {}".format(number, factorials))
 
 
 def connect():

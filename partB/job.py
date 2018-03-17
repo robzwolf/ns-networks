@@ -1,7 +1,6 @@
 class Job():
     def __init__(self, command, data=None):
         # print("Created Job, cmd={}".format(command))
-        # self.item_id = item_id
         self.command = command
         self.data = data
         self.result = None
@@ -17,7 +16,6 @@ class Job():
         """
         assert class_name == "job.Job"
         j = Job(j_dict["command"], j_dict["data"])
-        # j = Job(j_dict["item_id"], j_dict["data"])
         j.result = j_dict["result"]
         j.processed_by = j_dict["processed_by"]
         return j

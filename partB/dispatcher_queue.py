@@ -1,10 +1,3 @@
-# try:
-#     import queue
-# except ImportError:
-#     import Queue as queue
-from time import time
-
-
 class DispatcherQueue:
     def __init__(self):
         # self.job_queue = queue.Queue()

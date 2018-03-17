@@ -81,6 +81,7 @@ def handle_delete_init(file_name):
 def handle_delete_full(file_name, confirmation):
     """
     Delete a file.
+    :param confirmation:
     :param file_name:
     :return:
     """
@@ -94,34 +95,8 @@ def handle_delete_full(file_name, confirmation):
                 "file_name": file_name}
 
 
-
-
-# def factorise(n):
-#     """
-#     Simple algorithm to find the prime factors of the given number n
-#     :param n:
-#     :return:
-#     """
-#
-#     def is_prime(n):
-#         return not any(x for x in range(2, int(sqrt(n)) + 1) if n % x == 0)
-#
-#     primes = []
-#     candidates = range(2, n + 1)
-#     candidate = 2
-#     while not primes and candidate in candidates:
-#         if n % candidate == 0 and is_prime(candidate):
-#             primes = primes + [candidate] + factorise(n // candidate)
-#         candidate += 1
-#     return primes
-
-
-## Pyro stuff
-
-
 def process(job):
-    # print("Factorising {} --> ".format(job.data))
-    sys.stdout.flush()
+    # sys.stdout.flush()
     # Handle the job appropriately, according to its command
     print("job.command = {}".format(job.command))
     if job.command == "UPLD_INIT":

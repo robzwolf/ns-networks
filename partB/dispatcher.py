@@ -1,9 +1,4 @@
-# try:
-#     import queue
-# except ImportError:
-#     import Queue as queue
 from time import time
-
 import Pyro4
 from Pyro4.util import SerializerBase
 from job import Job
