@@ -11,7 +11,7 @@ from job import Job
 # For 'job.Job' we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 
-# For 'dispatcher_queue.DispatcherQueue' we register a deserialisation hook to be able to get these back from Pyro
+# For "dispatcher_queue.DispatcherQueue" we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
 SERVER_NAME = "Server_{}@{}".format(os.getpid(), socket.gethostname())
@@ -138,7 +138,8 @@ def main():
             job = dispatcher_queue.get_job()
             process(job)
             print("Putting {} in results queue".format(job))
-            dispatcher_queue.put_result(job)
+            # dispatcher_queue.put_result(job)
+            dispatcher.put_result(job)
         except ValueError:
             print("No job available yet.")
         else:

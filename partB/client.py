@@ -8,7 +8,7 @@ from time import time
 # For "job.Job" we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 
-# For 'dispatcher_queue.DispatcherQueue' we register a deserialisation hook to be able to get these back from Pyro
+# For "dispatcher_queue.DispatcherQueue" we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
 NUMBER_OF_ITEMS = 40
@@ -100,13 +100,6 @@ def menu():
 def main():
     while True:
         menu()
-
-    # print("This program will calculate prime factors of a bunch of random numbers.")
-    # print("The more servers you will start on different cores, the faster you will get the complete list of results!")
-    # with Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher") as dispatcher:
-    # #     place_work(dispatcher)
-    #     numbers = collect_results(dispatcher)
-    # print_results(numbers)
 
 
 if __name__ == "__main__":
