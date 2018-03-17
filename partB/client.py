@@ -2,11 +2,11 @@ import random
 import sys
 import Pyro4
 from Pyro4.util import SerializerBase
-from work_item import WorkItem
+from job import Job
 from time import time
 
-# For "work_item.WorkItem" we register a deserialisation hook to be able to get these back from Pyro
-SerializerBase.register_dict_to_class("work_item.WorkItem", WorkItem.from_dict)
+# For "job.Job" we register a deserialisation hook to be able to get these back from Pyro
+SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 
 NUMBER_OF_ITEMS = 40
 
@@ -17,7 +17,7 @@ dispatcher = None
 #     print("Placing work items into dispatcher queue.")
 #     for i in range(NUMBER_OF_ITEMS):
 #         number = random.randint(3211, 4999999) * random.randint(3211, 999999)
-#         item = WorkItem(i + 1, number)
+#         item = Job(i + 1, number)
 #         dispatcher.put_work(item)
 #
 #
@@ -65,7 +65,7 @@ def upload():
         t0 = time()
 
         # Send the command and file name
-        dispatcher.put_work(WorkItem("UPLD_INIT", {
+        dispatcher.put_work(Job("UPLD_INIT", {
                                          "file_name": file_name
                                      }))
 
@@ -76,7 +76,7 @@ def upload():
             return
 
         # Send the file contents to the server
-        dispatcher.put_work(WorkItem("UPLD_DATA", {
+        dispatcher.put_work(Job("UPLD_DATA", {
                                          "file_name": file_name,
                                          "file_contents": file_contents
                                      }))

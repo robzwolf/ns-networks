@@ -54,3 +54,4 @@ partB/BigFile.JPG
 *.psdUPLOADED
 *.mp4UPLOADED
 partA/submission/
+partB/__pycache__/

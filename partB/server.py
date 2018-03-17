@@ -5,10 +5,10 @@ import sys
 from math import sqrt
 import Pyro4
 from Pyro4.util import SerializerBase
-from work_item import WorkItem
+from job import Job
 
-# For 'work_item.WorkItem' we register a deserialisation hook to be able to get these back from Pyro
-SerializerBase.register_dict_to_class("work_item.WorkItem", WorkItem.from_dict)
+# For 'job.Job' we register a deserialisation hook to be able to get these back from Pyro
+SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 
 WORKER_NAME = "Worker_{}@{}".format(os.getpid(), socket.gethostname())
 
