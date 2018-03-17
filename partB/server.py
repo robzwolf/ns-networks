@@ -8,22 +8,20 @@ from Pyro4.util import SerializerBase
 from dispatcher_queue import DispatcherQueue
 from job import Job
 
-# For 'job.Job' we register a deserialisation hook to be able to get these back from Pyro
+# For "job.Job" we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 
 # For "dispatcher_queue.DispatcherQueue" we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
-SERVER_NAME = "Server_{}@{}".format(os.getpid(), socket.gethostname())
+SERVER_NAME = ""
 
-
-## Handlers
 
 def handle_upload_init(file_name):
     """
     Handles an upload request with just the file name.
     """
-    return "Ready to receive"
+    return {"outcome": "ready to receive"}
 
 
 def handle_upload_data(file_name, file_contents, high_reliability):
@@ -47,7 +45,6 @@ def handle_list():
     Lists all the files in all directories.
     :return:
     """
-    # TODO: Make this read from all servers
     return {"files_list": os.listdir(".")}
 
 
@@ -85,7 +82,6 @@ def handle_delete_full(file_name, confirmation):
     :param file_name:
     :return:
     """
-    # TODO: Make this delete the file from all servers
     if confirmation:
         os.remove(file_name)
         return {"outcome": "Deleted",
@@ -96,7 +92,6 @@ def handle_delete_full(file_name, confirmation):
 
 
 def process(job):
-    # sys.stdout.flush()
     # Handle the job appropriately, according to its command
     print("job.command = {}".format(job.command))
     if job.command == "UPLD_INIT":
@@ -120,14 +115,22 @@ def process(job):
 
 
 def main():
+    # Handle server name
+    global SERVER_NAME
+    if len(sys.argv) < 2:
+        print("Failed to specify a server name.")
+        return
+    else:
+        SERVER_NAME = sys.argv[1].upper()
+
     dispatcher = Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher")
-    print("This is server {}".format(SERVER_NAME))
+    print("This is server '{}'.".format(SERVER_NAME))
 
     # Register the server with the dispatcher
     dispatcher.register_server(SERVER_NAME)
 
+    # Test hello
     print("hello:", dispatcher.get_hello())
-    # print("all server queues:", dispatcher.get_server_queues())
 
     print("Getting job from dispatcher.")
     while True:
@@ -138,7 +141,6 @@ def main():
             job = dispatcher_queue.get_job()
             process(job)
             print("Putting {} in results queue".format(job))
-            # dispatcher_queue.put_result(job)
             dispatcher.put_result(job)
         except ValueError:
             print("No job available yet.")
@@ -148,5 +150,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-#aaaa

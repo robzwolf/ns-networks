@@ -37,19 +37,19 @@ def upload():
 
         # Send the command and file name
         dispatcher.put_job(Job("UPLD_INIT", {
-                                         "file_name": file_name
-                                     }))
+                                             "file_name": file_name
+        }))
 
         # Check the server is ready to receive
         result = dispatcher.get_result().result
-        if result != "Ready to receive":
+        if result["outcome"] != "ready to receive":
             print("Error, server not ready to receive: {}".format(result))
             return
 
         # Send the file contents to the server
         dispatcher.put_job(Job("UPLD_DATA", {
-                                         "file_name": file_name,
-                                         "file_contents": file_contents
+                                             "file_name": file_name,
+                                             "file_contents": file_contents
                                      }))
 
         # Get the response from the upload

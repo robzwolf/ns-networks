@@ -11,6 +11,9 @@ NAME SERVER:
     `pyro4-ns`
 
 
+SERVER:
+    To run the server:
+    2) `python3 server.py <name>`, e.g. `python3 server.py HERCULES` will start a server with the name `HERCULES`
 
 
 
