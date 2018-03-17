@@ -10,7 +10,7 @@ from job import Job
 # For 'job.Job' we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 
-WORKER_NAME = "Worker_{}@{}".format(os.getpid(), socket.gethostname())
+SERVER_NAME = "Server_{}@{}".format(os.getpid(), socket.gethostname())
 
 
 ## Handlers
@@ -43,7 +43,7 @@ def handle_list():
     Lists all the files in all directories.
     :return:
     """
-    # TODO: Make this read from all workers
+    # TODO: Make this read from all servers
     return {"files_list": os.listdir()}
 
 
@@ -80,7 +80,7 @@ def handle_delete_full(file_name, confirmation):
     :param file_name:
     :return:
     """
-    # TODO: Make this delete the file from all workers
+    # TODO: Make this delete the file from all servers
     if confirmation:
         os.remove(file_name)
         return {"outcome": "Deleted",
@@ -115,44 +115,44 @@ def handle_delete_full(file_name, confirmation):
 ## Pyro stuff
 
 
-def process(item):
-    # print("Factorising {} --> ".format(item.data))
+def process(job):
+    # print("Factorising {} --> ".format(job.data))
     sys.stdout.flush()
-    # Handle the work item appropriately, according to its command
-    print("item.command = {}".format(item.command))
-    if item.command == "UPLD_INIT":
-        item.result = handle_upload_init(item.data["file_name"])
-    elif item.command == "UPLD_DATA":
-        item.result = handle_upload_data(item.data["file_name"],
-                                         base64.b64decode(item.data["file_contents"]["data"]),
-                                         item.data["high_reliability"] if "high_reliability" in item.data else False)
-    elif item.command == "LIST":
-        item.result = handle_list()
-    elif item.command == "DWLD":
-        item.result = handle_download(item.data["file_name"])
-    elif item.command == "DELF_INIT":
-        item.result = handle_delete_init(item.data["file_name"])
-    elif item.command == "DELF_CONF":
-        item.result = handle_delete_full(item.data["file_name"],
-                                         item.data["confirm"])
+    # Handle the job appropriately, according to its command
+    print("job.command = {}".format(job.command))
+    if job.command == "UPLD_INIT":
+        job.result = handle_upload_init(job.data["file_name"])
+    elif job.command == "UPLD_DATA":
+        job.result = handle_upload_data(job.data["file_name"],
+                                        base64.b64decode(job.data["file_contents"]["data"]),
+                                        job.data["high_reliability"] if "high_reliability" in job.data else False)
+    elif job.command == "LIST":
+        job.result = handle_list()
+    elif job.command == "DWLD":
+        job.result = handle_download(job.data["file_name"])
+    elif job.command == "DELF_INIT":
+        job.result = handle_delete_init(job.data["file_name"])
+    elif job.command == "DELF_CONF":
+        job.result = handle_delete_full(job.data["file_name"],
+                                        job.data["confirm"])
 
-    print("item.result = {}".format(item.result))
-    item.processed_by = WORKER_NAME
+    print("job.result = {}".format(job.result))
+    job.processed_by = SERVER_NAME
 
 
 def main():
     dispatcher = Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher")
-    print("This is worker {}".format(WORKER_NAME))
-    print("getting work from dispatcher.")
+    print("This is server {}".format(SERVER_NAME))
+    print("Getting job from dispatcher.")
     while True:
         try:
-            item = dispatcher.get_work()
+            job = dispatcher.get_job()
         except ValueError:
-            print("No work available yet.")
+            print("No job available yet.")
         else:
-            process(item)
-            print("Putting {} in results queue".format(item))
-            dispatcher.put_result(item)
+            process(job)
+            print("Putting {} in results queue".format(job))
+            dispatcher.put_result(job)
 
 
 if __name__ == "__main__":

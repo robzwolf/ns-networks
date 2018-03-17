@@ -65,7 +65,7 @@ def upload():
         t0 = time()
 
         # Send the command and file name
-        dispatcher.put_work(Job("UPLD_INIT", {
+        dispatcher.put_job(Job("UPLD_INIT", {
                                          "file_name": file_name
                                      }))
 
@@ -76,7 +76,7 @@ def upload():
             return
 
         # Send the file contents to the server
-        dispatcher.put_work(Job("UPLD_DATA", {
+        dispatcher.put_job(Job("UPLD_DATA", {
                                          "file_name": file_name,
                                          "file_contents": file_contents
                                      }))
@@ -131,9 +131,9 @@ def main():
         menu()
 
     # print("This program will calculate prime factors of a bunch of random numbers.")
-    # print("The more workers you will start on different cores, the faster you will get the complete list of results!")
+    # print("The more servers you will start on different cores, the faster you will get the complete list of results!")
     # with Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher") as dispatcher:
-    #     place_work(dispatcher)
+    # #     place_work(dispatcher)
     #     numbers = collect_results(dispatcher)
     # print_results(numbers)
 

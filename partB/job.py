@@ -14,9 +14,6 @@ class Job():
     def from_dict(class_name, j_dict):
         """
         Deserialise a Job from Pyro4
-        :param classname:
-        :param j_dict:
-        :return:
         """
         assert class_name == "job.Job"
         j = Job(j_dict["command"], j_dict["data"])
