@@ -12,7 +12,7 @@ SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
-class DispatcherQueue():
+class Dispatcher():
     def __init__(self):
         self.work_queue = queue.Queue()
         self.result_queue = queue.Queue()
@@ -45,6 +45,6 @@ class DispatcherQueue():
 
 # Main program
 Pyro4.Daemon.serveSimple({
-    DispatcherQueue: "distributed_ftp.dispatcher"
+    Dispatcher: "distributed_ftp.dispatcher"
 })
 print("Dispatcher running")
