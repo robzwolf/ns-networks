@@ -1,46 +1,57 @@
-try:
-    import queue
-except ImportError:
-    import Queue as queue
+# try:
+#     import queue
+# except ImportError:
+#     import Queue as queue
+from time import time
+
 import Pyro4
 from Pyro4.util import SerializerBase
 from job import Job
+from dispatcher_queue import DispatcherQueue
 
 # For 'job.Job' we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 
+# For 'dispatcher_queue.DispatcherQueue' we register a deserialisation hook to be able to get these back from Pyro
+SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
-class Dispatcher():
+class Dispatcher:
     def __init__(self):
-        self.job_queue = queue.Queue()
-        self.result_queue = queue.Queue()
+        self.server_queues = {}
 
-    def put_job(self, item):
-        self.job_queue.put(item)
-        print(self.job_queue_size())
+    def register_server(self, server_name):
+        print("Server {} registered itself.".format(server_name))
+        dq = DispatcherQueue()
+        self.server_queues[server_name] = dq
 
-    def get_job(self, timeout=5):
-        try:
-            return self.job_queue.get(block=True, timeout=timeout)
-        except queue.Empty:
-            raise ValueError("No result available")
+    def get_server_queue(self, server_name, timeout=5):
+        start_time = time()
+        while time() < start_time + 5:
+            sq = self.server_queues[server_name]
+            if sq.job_queue_size() > 0:
+                # print("Called get_server_queue({})".format(server_name))
+                print("sq from get_server_queue({}) = {}".format(server_name, sq))
+                return sq
+        raise ValueError("Server queue has no jobs in it")
+        # return
 
-    def put_result(self, item):
-        self.result_queue.put(item)
+    # def get_server_queues(self):
+    #     return self.server_queues
 
-    def get_result(self, timeout=5):
-        try:
-            return self.result_queue.get(block=True, timeout=timeout)
-        except queue.Empty:
-            raise ValueError("No result available")
+    def get_hello(self):
+        return "Hello"
 
-    def job_queue_size(self):
-        return self.job_queue.qsize()
+    def put_job(self, job):
+        print("Got job = {}".format(job))
+        for sn in self.server_queues.keys():
+            self.server_queues[sn].put_job(job)
+            print("Put job={} into queue with name '{}'".format(job, sn))
 
-    def result_queue_size(self):
-        return self.result_queue.qsize()
+    def get_result(self):
+        print("Client requested result")
+        return None
 
 
 # Main program

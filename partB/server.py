@@ -2,13 +2,17 @@ import base64
 import os
 import socket
 import sys
-from math import sqrt
 import Pyro4
 from Pyro4.util import SerializerBase
+
+from dispatcher_queue import DispatcherQueue
 from job import Job
 
 # For 'job.Job' we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
+
+# For 'dispatcher_queue.DispatcherQueue' we register a deserialisation hook to be able to get these back from Pyro
+SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
 SERVER_NAME = "Server_{}@{}".format(os.getpid(), socket.gethostname())
 
@@ -44,7 +48,7 @@ def handle_list():
     :return:
     """
     # TODO: Make this read from all servers
-    return {"files_list": os.listdir()}
+    return {"files_list": os.listdir(".")}
 
 
 def handle_download(file_name):
@@ -143,17 +147,30 @@ def process(job):
 def main():
     dispatcher = Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher")
     print("This is server {}".format(SERVER_NAME))
+
+    # Register the server with the dispatcher
+    dispatcher.register_server(SERVER_NAME)
+
+    print("hello:", dispatcher.get_hello())
+    # print("all server queues:", dispatcher.get_server_queues())
+
     print("Getting job from dispatcher.")
     while True:
         try:
-            job = dispatcher.get_job()
+            # Get this server's queue
+            dispatcher_queue = dispatcher.get_server_queue(SERVER_NAME)
+            print("dispatcher_queue = {}".format(dispatcher_queue))
+            job = dispatcher_queue.get_job()
+            process(job)
+            print("Putting {} in results queue".format(job))
+            dispatcher_queue.put_result(job)
         except ValueError:
             print("No job available yet.")
         else:
-            process(job)
-            print("Putting {} in results queue".format(job))
-            dispatcher.put_result(job)
+            pass
 
 
 if __name__ == "__main__":
     main()
+
+#aaaa

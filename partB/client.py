@@ -2,11 +2,16 @@ import random
 import sys
 import Pyro4
 from Pyro4.util import SerializerBase
+
+from dispatcher_queue import DispatcherQueue
 from job import Job
 from time import time
 
 # For "job.Job" we register a deserialisation hook to be able to get these back from Pyro
 SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
+
+# For 'dispatcher_queue.DispatcherQueue' we register a deserialisation hook to be able to get these back from Pyro
+SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
 NUMBER_OF_ITEMS = 40
 
