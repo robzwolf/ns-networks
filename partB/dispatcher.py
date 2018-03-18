@@ -245,6 +245,43 @@ class Dispatcher:
         response_result.processed_by = None
         self.put_external_result(response_result)
 
+    def handle_dwld(self, job):
+        # Get list of files from all servers
+        list_job = Job("LIST")
+        result_to_use = None
+        for server_name in self.server_queues.keys():
+            print("Requesting list of files from {}".format(server_name))
+            self.put_job_in_specific_server_queue(list_job, server_name)
+            result = self.get_internal_result_from_server(server_name)
+            if job.data["file_name"] in result.result["files_list"]:
+                print("File '{}' was found on server '{}'".format(job.data["file_name"], result.processed_by))
+                result_to_use = result
+                break
+            else:
+                print("File '{}' was not found on server '{}'".format(job.data["file_name"], result.processed_by))
+
+        print("result_to_use is = {}".format(result_to_use))
+        if result_to_use is None:
+            response_result = copy.deepcopy(job)
+            response_result.result = {
+                "file_exists": False,
+                "outcome": "success",
+                "file_name": job.data["file_name"]
+            }
+            # response_result.result["file_exists"] = False
+            # response_result.result["file_name"] = job.data["success"]
+            # response_result.result["outcome"] = "file not found"
+            print("RETURNING {}".format(response_result))
+            self.put_external_result(response_result)
+        else:
+            # Request the file from the relevant server
+            self.put_job_in_specific_server_queue(job, result_to_use.processed_by)
+
+            # Relay the result straight back to the client
+            result = self.get_internal_result_from_server(result_to_use.processed_by)
+            self.put_external_result(result)
+
+
     def put_job(self, job):
         print("Got job = {}".format(job))
 
@@ -254,7 +291,7 @@ class Dispatcher:
         elif job.command == "UPLD_DATA":
             self.handle_upld_data(job)
         elif job.command == "DWLD":
-            pass
+            self.handle_dwld(job)
         elif job.command == "DELF_INIT":
             self.handle_delf_init(job)
         elif job.command == "DELF_CONF":
@@ -323,8 +360,12 @@ class Dispatcher:
             return result
 
 
-# Main program
-Pyro4.Daemon.serveSimple({
-    Dispatcher: "distributed_ftp.dispatcher"
-})
-print("Dispatcher running")
+def main():
+    Pyro4.Daemon.serveSimple({
+        Dispatcher: "distributed_ftp.dispatcher"
+    })
+    print("Dispatcher running")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,3 +1,4 @@
+import base64
 import sys
 import Pyro4
 from Pyro4.util import SerializerBase
@@ -12,7 +13,7 @@ SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
 NUMBER_OF_ITEMS = 40
-WORKING_DIR = "./CLIENT_FILES/"
+SUBDIR = "./CLIENT_FILES/"
 dispatcher = None
 
 
@@ -38,7 +39,7 @@ def upload():
     file_name = input("Enter the name of the local file to upload: ")
 
     try:
-        with open(WORKING_DIR + file_name, "rb") as binary_file:
+        with open(SUBDIR + file_name, "rb") as binary_file:
             # Read the file
             file_contents = binary_file.read()
 
@@ -155,6 +156,36 @@ def delete_file():
         print("\nSuccessfully deleted '{}' from all servers.".format(file_name))
 
 
+def download_file():
+    if dispatcher is None:
+        print("Error: You are not connected to the server. Use CONN command first.")
+        return
+
+    print()
+
+    file_name = input("Enter the name of the remote file to download: ")
+
+    t0 = time()
+
+    dispatcher.put_job(Job("DWLD", data={"file_name": file_name}))
+
+    result = dispatcher.get_external_result()
+
+    if result.result["outcome"] != "success":
+        print("Something went wrong. Response was: {}".format(result.result["outcome"]))
+        return
+
+    if not result.result["file_exists"]:
+        print("The file '{}' does not exist on the remote server.".format(file_name))
+    else:
+        # Write the file contents to disk
+        file_contents = base64.b64decode(result.result["file_contents"]["data"])
+        with open(SUBDIR + file_name, "wb") as binary_file:
+            binary_file.write(file_contents)
+        t1 = time()
+        print("Downloaded {} ({:,} bytes) in {:,} seconds.".format(file_name, len(file_contents), round(t1 - t0, 2)))
+
+
 def menu():
     print()
     print("#########################################")
@@ -175,6 +206,8 @@ def menu():
         upload()
     elif command == "LIST":
         list_files()
+    elif command == "DWLD":
+        download_file()
     elif command == "DELF":
         delete_file()
     elif command == "QUIT":

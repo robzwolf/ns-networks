@@ -53,18 +53,32 @@ def handle_download(file_name):
     """
     Handles a download request.
     """
-    file_exists = os.path.isfile(file_name)
+    file_exists = os.path.isfile(SUBDIR + file_name)
     if file_exists:
         # Read the file contents and send them
         try:
             with open(SUBDIR + file_name, "rb") as binary_file:
                 # Read the whole file at once
                 file_contents = binary_file.read()
-            return file_contents
+            return {
+                "file_exists": True,
+                "file_name": file_name,
+                "file_contents": file_contents,
+                "outcome": "success"
+            }
         except FileNotFoundError as e:
             print("Error: File '{}' not found.".format(file_name))
+            return {
+                "file_exists": False,
+                "file_name": file_name,
+                "outcome": "success"
+            }
     else:
-        return None
+        return {
+                "file_exists": False,
+                "file_name": file_name,
+                "outcome": "success"
+            }
 
 
 def handle_delete_init(file_name):
