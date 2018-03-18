@@ -34,10 +34,13 @@ class Dispatcher:
     def register_server(self, server_name):
         if server_name not in self.server_queues.keys():
             print("Server '{}' registered itself.".format(server_name))
-            dq = DispatcherQueue()
-            self.server_queues[server_name] = dq
         else:
             print("Server '{}' re-registered itself.".format(server_name))
+            # Remove the old queue, just to be safe
+            del self.server_queues[server_name]
+
+        dq = DispatcherQueue()
+        self.server_queues[server_name] = dq
 
     def get_server_queue(self, server_name, timeout=5):
         start_time = time()
@@ -224,7 +227,7 @@ class Dispatcher:
     def put_job_in_specific_server_queue(self, job, server_name):
         self.server_queues[server_name].put_job(job)
 
-    def get_internal_results_from_all_servers(self, timeout=6):
+    def get_internal_results_from_all_servers(self, timeout=4):
         start_time = time()
         print("Getting internal results from all servers, start_time={}...".format(round(start_time, 2)))
         results = []

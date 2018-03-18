@@ -17,6 +17,7 @@ dispatcher = None
 
 
 def connect():
+    print("Connecting...")
     global dispatcher
     try:
         dispatcher = Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher")
@@ -48,6 +49,8 @@ def upload():
 
         high_reliability = True if hr == "Y" else False
         print("Using high reliability: {}".format(high_reliability))
+
+        print("Uploading...")
 
         t0 = time()
 
@@ -99,6 +102,11 @@ def quit_client():
 
 
 def list_files():
+    if dispatcher is None:
+        print("Error: You are not connected to the server. Use CONN command first.")
+        return
+
+    print("Getting list of files...")
     dispatcher.put_job(Job("LIST"))
     result = dispatcher.get_external_result()
 
@@ -106,7 +114,7 @@ def list_files():
         print("An error occurred retrieving the files list: {}".format(result.result["outcome"]))
         return
 
-    print("Files list is:")
+    print("\nFiles list is:")
     for file_name in result.result["files_list"]:
         print("  - {}".format(file_name))
 
