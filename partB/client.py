@@ -119,6 +119,29 @@ def list_files():
         print("  - {}".format(file_name))
 
 
+def delete_file():
+    if dispatcher is None:
+        print("Error: You are not connected to the server. Use CONN command first.")
+        return
+
+    file_name = input("Enter the name of the remote file to delete: ")
+
+    dispatcher.put_job(Job("DELF_INIT", data={"file_name": file_name}))
+
+    result = dispatcher.get_external_result()
+
+    if result.result["outcome"] != "success":
+        print("Something went wrong. Response was: {}".format(result.result["outcome"]))
+        return
+
+    if not result.result["file_exists"]:
+        print("The file '{}' does not exist on the remote server.".format(file_name))
+        return
+
+
+
+
+
 def menu():
     print()
     print("#########################################")
@@ -139,6 +162,8 @@ def menu():
         upload()
     elif command == "LIST":
         list_files()
+    elif command == "DELF":
+        delete_file()
     elif command == "QUIT":
         quit_client()
     else:

@@ -196,6 +196,33 @@ class Dispatcher:
 
         self.put_external_result(response_result)
 
+    def handle_delf_init(self, job):
+        print("delf_init job sent over to dispatcher")
+
+        # Check which, if any, servers the file exists on
+        self.put_job_in_all_queues(job)
+        list_job_results = self.get_internal_results_from_all_servers()
+        print("list_job_results = {}".format(list_job_results))
+        if len(list_job_results) == 0:
+            # There were no servers active
+            self.put_external_result(self.generate_failure_job("Unsuccessful, no servers running"))
+            return
+
+        return_result = copy.deepcopy(list_job_results[0])
+        return_result.result["file_exists"] = False
+
+        for result in list_job_results:
+            if result.result["file_exists"]:
+                return_result.result["file_exists"] = True
+
+        return_result.result["outcome"] = "success"
+        return_result.processed_by = None
+
+        self.put_external_result(return_result)
+
+    def handle_delf_conf(self, job):
+        pass
+
     def put_job(self, job):
         print("Got job = {}".format(job))
 
@@ -207,9 +234,9 @@ class Dispatcher:
         elif job.command == "DWLD":
             pass
         elif job.command == "DELF_INIT":
-            pass
+            self.handle_delf_init(job)
         elif job.command == "DELF_CONF":
-            pass
+            self.handle_delf_conf(job)
         elif job.command == "LIST":
             self.handle_list(job)
         else:
