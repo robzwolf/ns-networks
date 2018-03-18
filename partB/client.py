@@ -12,7 +12,7 @@ SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
 NUMBER_OF_ITEMS = 40
-
+WORKING_DIR = "./CLIENT_FILES/"
 dispatcher = None
 
 
@@ -37,7 +37,7 @@ def upload():
     file_name = input("Enter the name of the local file to upload: ")
 
     try:
-        with open(file_name, "rb") as binary_file:
+        with open(WORKING_DIR + file_name, "rb") as binary_file:
             # Read the file
             file_contents = binary_file.read()
 

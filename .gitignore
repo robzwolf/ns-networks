@@ -59,3 +59,5 @@ partB/__pycache__/
 *.py___jb_tmp___
 partB/SERVER_FILES_*/
 partB/old/
+partB/_old/
+partB/CLIENT_FILES/
