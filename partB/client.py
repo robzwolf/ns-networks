@@ -18,7 +18,15 @@ dispatcher = None
 
 def connect():
     global dispatcher
-    dispatcher = Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher")
+    try:
+        dispatcher = Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher")
+        if dispatcher.get_hello() != "Hello":
+            dispatcher = None
+            print("Error connecting to server.")
+        else:
+            print("Connection to server successful.")
+    except Exception as e:
+        print("Error connecting to server: {}".format(e))
 
 
 def upload():
@@ -33,17 +41,26 @@ def upload():
             # Read the file
             file_contents = binary_file.read()
 
+        # Ask about high reliability
+        hr = ""
+        while hr != "Y" and hr != "N":
+            hr = input("Use high reliability? [Y/N]: ").upper()
+
+        high_reliability = True if hr == "Y" else False
+        print("Using high reliability: {}".format(high_reliability))
+
         t0 = time()
 
         # Send the command and file name
         dispatcher.put_job(Job("UPLD_INIT", data={
-            "file_name": file_name
+            "file_name": file_name,
+            "high_reliability": high_reliability
         }))
 
         # Check the server is ready to receive
         result = dispatcher.get_external_result()
         if result.result["outcome"] != "ready to receive":
-            print("Error, server not ready to receive: {}".format(result))
+            print("Error, server not ready to receive: {}".format(result.result["outcome"]))
             return
 
         print("Received result = {}".format(result))
@@ -51,7 +68,9 @@ def upload():
         # Send the file contents to the server
         upld_data_job = Job("UPLD_DATA",
                             token=result.token,
-                            data={"file_name": file_name, "file_contents": file_contents})
+                            data={"file_name": file_name,
+                                  "file_contents": file_contents,
+                                  "high_reliability": high_reliability})
         print("Sending job to dispatcher: {}".format(upld_data_job))
         dispatcher.put_job(upld_data_job)
 
@@ -73,7 +92,10 @@ def upload():
 
 def quit_client():
     print("Quitting client...")
-    sys.exit(0)
+    try:
+        sys.exit(0)
+    except Exception as e:
+        pass
 
 
 def menu():

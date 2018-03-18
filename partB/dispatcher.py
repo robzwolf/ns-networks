@@ -13,8 +13,6 @@ SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
 
-
-
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
 class Dispatcher:
@@ -52,14 +50,44 @@ class Dispatcher:
                 return returnable_sq
         raise ValueError("Server queue has no jobs in it")
 
-    def get_hello(self):
+    @staticmethod
+    def get_hello():
         return "Hello"
 
-    def put_job(self, job):
-        print("Got job = {}".format(job))
+    @staticmethod
+    def generate_failure_job(outcome):
+        fail_result = Job("FAIL")
+        fail_result.processed_by = None
+        fail_result.result = {"outcome": outcome}
+        return fail_result
 
-        # Handle the job, depending on its command
-        if job.command == "UPLD_INIT":
+    def handle_upld_init(self, job):
+        if job.data["high_reliability"]:
+            # Send the file information to all servers
+            self.put_job_in_all_queues(job)
+
+            list_job_results = self.get_internal_results_from_all_servers()
+            print(list_job_results)
+
+            if len(list_job_results) == 0:
+                # We got no responses back, there are probably no servers active
+                self.put_external_result(self.generate_failure_job("Unsuccessful, no servers running"))
+                return
+
+            # Check all the servers are ready to receive
+            for result in list_job_results:
+                if result.result["outcome"] != "ready to receive":
+                    self.put_external_result(
+                        self.generate_failure_job("Unsuccessful, one of the servers is not ready"))
+                    return
+            print("All servers are ready to receive")
+
+            # Tell the client we are ready to receive
+            response_result = copy.deepcopy(list_job_results[0])
+            response_result.processed_by = None
+            self.put_external_result(response_result)
+
+        else:
             # Get number of files from each server and upload to the server with the least files
             list_job = Job("LIST")
             self.put_job_in_all_queues(list_job)
@@ -67,15 +95,15 @@ class Dispatcher:
             print("list_job_results = {}".format(list_job_results))
 
             # Use the server with the fewest files stored on it
+            if len(list_job_results) == 0:
+                # We got no responses back, there are probably no servers active
+                self.put_external_result(self.generate_failure_job("Unsuccessful, no servers running"))
+                return
             result_to_use = list_job_results[0]
             print("First, using result={}".format(result_to_use))
             for each_result in list_job_results:
-                print("In for loop, iter={}".format(each_result))
-                # print(len(each_result.result["files_list"]))
-                # print(len(result_to_use.result["files_list"]))
                 if len(each_result.result["files_list"]) < len(result_to_use.result["files_list"]):
                     result_to_use = each_result
-                print("End of this iter")
             print("Using result={}".format(result_to_use))
 
             # Upload the file to the chosen server
@@ -96,7 +124,34 @@ class Dispatcher:
 
             self.put_external_result(result)
 
-        elif job.command == "UPLD_DATA":
+    def handle_upld_data(self, job):
+        if job.data["high_reliability"]:
+            # Upload the file to all servers
+            self.put_job_in_all_queues(job)
+
+            list_job_results = self.get_internal_results_from_all_servers()
+            print(list_job_results)
+
+            if len(list_job_results) == 0:
+                # We got no responses back, there are probably no servers active
+                self.put_external_result(self.generate_failure_job("Unsuccessful, no servers responded"))
+                return
+
+            # Check all the servers had success
+            for result in list_job_results:
+                if result.result["outcome"] != "success":
+                    self.put_external_result(
+                        self.generate_failure_job("Unsuccessful, one of the servers did not have success"))
+                    return
+            print("All servers are ready to receive")
+
+            # Tell the client we are ready to receive
+            response_result = copy.deepcopy(list_job_results[0])
+            response_result.processed_by = None
+            self.put_external_result(response_result)
+
+
+        else:
 
             # Check we recognise the token
             if job.token not in self.UPLD_TOKEN_DICT:
@@ -113,6 +168,14 @@ class Dispatcher:
             print("Passing back to client result of UPLD_DATA, which was = {}".format(result))
             self.put_external_result(result)
 
+    def put_job(self, job):
+        print("Got job = {}".format(job))
+
+        # Handle the job, depending on its command
+        if job.command == "UPLD_INIT":
+            self.handle_upld_init(job)
+        elif job.command == "UPLD_DATA":
+            self.handle_upld_data(job)
         elif job.command == "DWLD":
             pass
         elif job.command == "DELF_INIT":
@@ -138,15 +201,12 @@ class Dispatcher:
 
     def get_internal_results_from_all_servers(self, timeout=6):
         start_time = time()
-        print("Getting internal results from all servers, start_time={:,}...".format(round(start_time, 2)))
+        print("Getting internal results from all servers, start_time={}...".format(round(start_time, 2)))
         results = []
         while len(results) < len(self.server_queues.keys()) and time() < start_time + timeout:
-            print("Begin next loop iteration")
             result = self.get_internal_result()
             if result:
                 results.append(result)
-            print("Got to end of loop iteration")
-        print("Returning results...")
         return results
 
     def get_internal_result_from_server(self, server_name):
@@ -173,11 +233,12 @@ class Dispatcher:
                 return result
 
     def put_internal_result(self, job_result):
-        print("Server '{}' put internal result '{}' in results_queue".format(job_result.processed_by, job_result.result))
+        print(
+            "Server '{}' put internal result '{}' in results_queue".format(job_result.processed_by, job_result.result))
         self.internal_result_queue.append(job_result)
 
     def get_internal_result(self):
-        print("Server requested internal result")
+        # print("Server requested internal result")
         if len(self.internal_result_queue) > 0:
             result = copy.deepcopy(self.internal_result_queue[0])
             print("Result is '{}'".format(result))
