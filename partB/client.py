@@ -36,24 +36,27 @@ def upload():
         t0 = time()
 
         # Send the command and file name
-        dispatcher.put_job(Job("UPLD_INIT", {
-                                             "file_name": file_name
+        dispatcher.put_job(Job("UPLD_INIT", data={
+            "file_name": file_name
         }))
 
         # Check the server is ready to receive
-        result = dispatcher.get_result().result
-        if result["outcome"] != "ready to receive":
+        result = dispatcher.get_external_result()
+        if result.result["outcome"] != "ready to receive":
             print("Error, server not ready to receive: {}".format(result))
             return
 
+        print("Received result = {}".format(result))
+
         # Send the file contents to the server
-        dispatcher.put_job(Job("UPLD_DATA", {
-                                             "file_name": file_name,
-                                             "file_contents": file_contents
-                                     }))
+        upld_data_job = Job("UPLD_DATA",
+                            token=result.token,
+                            data={"file_name": file_name, "file_contents": file_contents})
+        print("Sending job to dispatcher: {}".format(upld_data_job))
+        dispatcher.put_job(upld_data_job)
 
         # Get the response from the upload
-        result = dispatcher.get_result().result
+        result = dispatcher.get_external_result().result
 
         t1 = time()
 

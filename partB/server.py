@@ -15,6 +15,7 @@ SerializerBase.register_dict_to_class("job.Job", Job.from_dict)
 SerializerBase.register_dict_to_class("dispatcher_queue.DispatcherQueue", DispatcherQueue.from_dict)
 
 SERVER_NAME = ""
+SUBDIR = ""
 
 
 def handle_upload_init(file_name):
@@ -24,13 +25,13 @@ def handle_upload_init(file_name):
     return {"outcome": "ready to receive"}
 
 
-def handle_upload_data(file_name, file_contents, high_reliability):
+def handle_upload_data(file_name, file_contents):
     """
     Handles a full upload request.
     :return:
     """
     # Write the file contents to disk
-    with open(file_name + "UPLOADED", "wb") as binary_file:
+    with open(SUBDIR + file_name, "wb") as binary_file:
         binary_file.write(file_contents)
 
     print("Wrote {} ({:,} bytes) to disk.".format(file_name, len(file_contents)))
@@ -45,7 +46,7 @@ def handle_list():
     Lists all the files in all directories.
     :return:
     """
-    return {"files_list": os.listdir(".")}
+    return {"files_list": os.listdir(SUBDIR)}
 
 
 def handle_download(file_name):
@@ -56,7 +57,7 @@ def handle_download(file_name):
     if file_exists:
         # Read the file contents and send them
         try:
-            with open(file_name, "rb") as binary_file:
+            with open(SUBDIR + file_name, "rb") as binary_file:
                 # Read the whole file at once
                 file_contents = binary_file.read()
             return file_contents
@@ -72,7 +73,7 @@ def handle_delete_init(file_name):
     :param file_name:
     :return:
     """
-    return {"file_exists": os.path.isfile(file_name)}
+    return {"file_exists": os.path.isfile(SUBDIR + file_name)}
 
 
 def handle_delete_full(file_name, confirmation):
@@ -98,8 +99,7 @@ def process(job):
         job.result = handle_upload_init(job.data["file_name"])
     elif job.command == "UPLD_DATA":
         job.result = handle_upload_data(job.data["file_name"],
-                                        base64.b64decode(job.data["file_contents"]["data"]),
-                                        job.data["high_reliability"] if "high_reliability" in job.data else False)
+                                        base64.b64decode(job.data["file_contents"]["data"]))
     elif job.command == "LIST":
         job.result = handle_list()
     elif job.command == "DWLD":
@@ -112,6 +112,8 @@ def process(job):
 
     print("job.result = {}".format(job.result))
     job.processed_by = SERVER_NAME
+    job.data = None
+    return job
 
 
 def main():
@@ -122,6 +124,13 @@ def main():
         return
     else:
         SERVER_NAME = sys.argv[1].upper()
+
+    # Make a subdirectory to store this server's files in
+    global SUBDIR
+    SUBDIR = "./SERVER_FILES_" + SERVER_NAME + "/"
+    if not os.path.exists(SUBDIR):
+        os.makedirs(SUBDIR)
+        print("Made directory {}".format(SUBDIR))
 
     dispatcher = Pyro4.core.Proxy("PYRONAME:distributed_ftp.dispatcher")
     print("This is server '{}'.".format(SERVER_NAME))
@@ -139,9 +148,9 @@ def main():
             dispatcher_queue = dispatcher.get_server_queue(SERVER_NAME)
             print("dispatcher_queue = {}".format(dispatcher_queue))
             job = dispatcher_queue.get_job()
-            process(job)
-            print("Putting {} in results queue".format(job))
-            dispatcher.put_result(job)
+            result = process(job)
+            print("Putting {} in internal results queue".format(result))
+            dispatcher.put_internal_result(result)
         except ValueError:
             print("No job available yet.")
         else:
