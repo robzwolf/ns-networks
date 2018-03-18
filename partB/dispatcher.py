@@ -168,6 +168,33 @@ class Dispatcher:
             print("Passing back to client result of UPLD_DATA, which was = {}".format(result))
             self.put_external_result(result)
 
+    def handle_list(self, job):
+        # Send LIST job to all servers
+        self.put_job_in_all_queues(job)
+        list_job_results = self.get_internal_results_from_all_servers()
+        print("list_job_results = {}".format(list_job_results))
+        if len(list_job_results) == 0:
+            # There were no servers active
+            self.put_external_result(self.generate_failure_job("Unsuccessful, no servers running"))
+            return
+
+        # Concatenate the lists of files
+        total_files_list = []
+        for result in list_job_results:
+            files_list = result.result["files_list"]
+            for each_file in files_list:
+                if each_file not in total_files_list:
+                    total_files_list.append(each_file)
+
+        print("total_files_list is now = {}".format(total_files_list))
+
+        # Return the files list
+        response_result = copy.deepcopy(list_job_results[0])
+        response_result.result["files_list"] = total_files_list
+
+        self.put_external_result(response_result)
+
+
     def put_job(self, job):
         print("Got job = {}".format(job))
 
@@ -183,7 +210,7 @@ class Dispatcher:
         elif job.command == "DELF_CONF":
             pass
         elif job.command == "LIST":
-            pass
+            self.handle_list(job)
         else:
             print("Unrecognised command: {}".format(job.command))
             return

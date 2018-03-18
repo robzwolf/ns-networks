@@ -98,6 +98,19 @@ def quit_client():
         pass
 
 
+def list_files():
+    dispatcher.put_job(Job("LIST"))
+    result = dispatcher.get_external_result()
+
+    if result.result["outcome"] != "success":
+        print("An error occurred retrieving the files list: {}".format(result.result["outcome"]))
+        return
+
+    print("Files list is:")
+    for file_name in result.result["files_list"]:
+        print("  - {}".format(file_name))
+
+
 def menu():
     print()
     print("#########################################")
@@ -116,6 +129,8 @@ def menu():
         connect()
     elif command == "UPLD":
         upload()
+    elif command == "LIST":
+        list_files()
     elif command == "QUIT":
         quit_client()
     else:

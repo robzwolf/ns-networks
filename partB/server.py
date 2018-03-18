@@ -46,7 +46,7 @@ def handle_list():
     Lists all the files in all directories.
     :return:
     """
-    return {"files_list": os.listdir(SUBDIR)}
+    return {"files_list": os.listdir(SUBDIR), "outcome": "success"}
 
 
 def handle_download(file_name):
