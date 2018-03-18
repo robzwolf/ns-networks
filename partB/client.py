@@ -176,6 +176,8 @@ def download_file():
     if file_name == "":
         return
 
+    print("Requesting '{}', please wait...".format(file_name))
+
     t0 = time()
 
     dispatcher.put_job(Job("DWLD", data={"file_name": file_name}))

@@ -10,7 +10,7 @@ class DispatcherQueue:
 
     def put_job(self, job):
         self.job_queue.append(job)
-        print(self.job_queue_size())
+        # print(self.job_queue_size())
 
     def get_job(self):
         if self.job_queue_size() > 0:

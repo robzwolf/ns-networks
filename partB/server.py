@@ -128,7 +128,7 @@ def process(job):
         job.result = handle_delete_full(job.data["file_name"],
                                         job.data["confirmation"])
 
-    print("job.result = {}".format(job.result))
+    # print("job.result = {}".format(job.result))
     job.processed_by = SERVER_NAME
     job.data = None
     return job
@@ -164,10 +164,10 @@ def main():
         try:
             # Get this server's queue
             dispatcher_queue = dispatcher.get_server_queue(SERVER_NAME)
-            print("dispatcher_queue = {}".format(dispatcher_queue))
+            # print("dispatcher_queue = {}".format(dispatcher_queue))
             job = dispatcher_queue.get_job()
             result = process(job)
-            print("Putting {} in internal results queue".format(result))
+            # print("Putting {} in internal results queue".format(result))
             dispatcher.put_internal_result(result)
         except ValueError:
             print("No job available yet.")
