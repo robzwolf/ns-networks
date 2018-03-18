@@ -150,7 +150,6 @@ class Dispatcher:
             response_result.processed_by = None
             self.put_external_result(response_result)
 
-
         else:
 
             # Check we recognise the token
@@ -193,7 +192,6 @@ class Dispatcher:
         response_result.result["files_list"] = total_files_list
 
         self.put_external_result(response_result)
-
 
     def put_job(self, job):
         print("Got job = {}".format(job))
