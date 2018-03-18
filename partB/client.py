@@ -38,6 +38,9 @@ def upload():
 
     file_name = input("Enter the name of the local file to upload: ")
 
+    if file_name == "":
+        return
+
     try:
         with open(SUBDIR + file_name, "rb") as binary_file:
             # Read the file
@@ -99,7 +102,7 @@ def quit_client():
     try:
         sys.exit(0)
     except:
-        pass
+        sys.exit(0)
 
 
 def list_files():
