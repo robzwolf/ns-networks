@@ -148,7 +148,7 @@ class Dispatcher:
                     return
             print("All servers are ready to receive")
 
-            # Tell the client we are ready to receive
+            # Tell the client we successfully uploaded to all servers
             response_result = copy.deepcopy(list_job_results[0])
             response_result.processed_by = None
             self.put_external_result(response_result)
@@ -221,7 +221,29 @@ class Dispatcher:
         self.put_external_result(return_result)
 
     def handle_delf_conf(self, job):
-        pass
+        # Delete the file from all servers
+        self.put_job_in_all_queues(job)
+
+        list_job_results = self.get_internal_results_from_all_servers()
+        print(list_job_results)
+
+        if len(list_job_results) == 0:
+            # We got no responses back, there are probably no servers active
+            self.put_external_result(self.generate_failure_job("Unsuccessful, no servers responded"))
+            return
+
+        # Check all the servers had success
+        for result in list_job_results:
+            if result.result["outcome"] != "success":
+                self.put_external_result(
+                    self.generate_failure_job("Unsuccessful, one of the servers did not have success"))
+                return
+        print("All servers deleted file")
+
+        # Tell the client we successfully uploaded to all servers
+        response_result = copy.deepcopy(list_job_results[0])
+        response_result.processed_by = None
+        self.put_external_result(response_result)
 
     def put_job(self, job):
         print("Got job = {}".format(job))

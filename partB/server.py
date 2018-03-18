@@ -83,12 +83,16 @@ def handle_delete_full(file_name, confirmation):
     :param file_name:
     :return:
     """
-    if confirmation:
-        os.remove(file_name)
-        return {"outcome": "Deleted",
+    if confirmation == "Y":
+        try:
+            os.remove(SUBDIR + file_name)
+            print("Removed '{}' from file system.".format(file_name))
+        except FileNotFoundError as e:
+            print("File '{}' did not exist for deletion, but it doesn't matter.".format(file_name))
+        return {"outcome": "success",
                 "file_name": file_name}
     else:
-        return {"outcome": "Aborted delete",
+        return {"outcome": "aborted delete due to client cancellation",
                 "file_name": file_name}
 
 
@@ -108,7 +112,7 @@ def process(job):
         job.result = handle_delete_init(job.data["file_name"])
     elif job.command == "DELF_CONF":
         job.result = handle_delete_full(job.data["file_name"],
-                                        job.data["confirm"])
+                                        job.data["confirmation"])
 
     print("job.result = {}".format(job.result))
     job.processed_by = SERVER_NAME

@@ -66,7 +66,7 @@ def upload():
             print("Error, server not ready to receive: {}".format(result.result["outcome"]))
             return
 
-        print("Received result = {}".format(result))
+        # print("Received result = {}".format(result))
 
         # Send the file contents to the server
         upld_data_job = Job("UPLD_DATA",
@@ -74,7 +74,7 @@ def upload():
                             data={"file_name": file_name,
                                   "file_contents": file_contents,
                                   "high_reliability": high_reliability})
-        print("Sending job to dispatcher: {}".format(upld_data_job))
+        # print("Sending job to dispatcher: {}".format(upld_data_job))
         dispatcher.put_job(upld_data_job)
 
         # Get the response from the upload
@@ -138,8 +138,21 @@ def delete_file():
         print("The file '{}' does not exist on the remote server.".format(file_name))
         return
 
+    confirmation = ""
+    while confirmation != "Y" and confirmation != "N":
+        confirmation = input("Are you sure you want to delete '{}'? [Y/N]: ".format(file_name)).upper()
 
+    if confirmation == "N":
+        return
 
+    dispatcher.put_job(Job("DELF_CONF", data={"file_name": file_name, "confirmation": confirmation}))
+
+    result = dispatcher.get_external_result()
+
+    if result.result["outcome"] != "success":
+        print("\nSomething went wrong. Response was: {}".format(result.result["outcome"]))
+    else:
+        print("\nSuccessfully deleted '{}' from all servers.".format(file_name))
 
 
 def menu():
