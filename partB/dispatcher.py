@@ -268,9 +268,6 @@ class Dispatcher:
                 "outcome": "success",
                 "file_name": job.data["file_name"]
             }
-            # response_result.result["file_exists"] = False
-            # response_result.result["file_name"] = job.data["success"]
-            # response_result.result["outcome"] = "file not found"
             print("RETURNING {}".format(response_result))
             self.put_external_result(response_result)
         else:
