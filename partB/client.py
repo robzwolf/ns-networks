@@ -98,7 +98,7 @@ def quit_client():
     print("Quitting client...")
     try:
         sys.exit(0)
-    except Exception as e:
+    except:
         pass
 
 

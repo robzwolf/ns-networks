@@ -253,12 +253,13 @@ class Dispatcher:
             print("Requesting list of files from {}".format(server_name))
             self.put_job_in_specific_server_queue(list_job, server_name)
             result = self.get_internal_result_from_server(server_name)
-            if job.data["file_name"] in result.result["files_list"]:
+            print(result)
+            if result is not None and job.data["file_name"] in result.result["files_list"]:
                 print("File '{}' was found on server '{}'".format(job.data["file_name"], result.processed_by))
                 result_to_use = result
                 break
             else:
-                print("File '{}' was not found on server '{}'".format(job.data["file_name"], result.processed_by))
+                print("File '{}' was not found on server '{}'".format(job.data["file_name"], server_name))
 
         print("result_to_use is = {}".format(result_to_use))
         if result_to_use is None:
@@ -277,7 +278,6 @@ class Dispatcher:
             # Relay the result straight back to the client
             result = self.get_internal_result_from_server(result_to_use.processed_by)
             self.put_external_result(result)
-
 
     def put_job(self, job):
         print("Got job = {}".format(job))
@@ -320,9 +320,10 @@ class Dispatcher:
                 results.append(result)
         return results
 
-    def get_internal_result_from_server(self, server_name):
+    def get_internal_result_from_server(self, server_name, timeout=4):
         print("Getting internal result from server '{}'...".format(server_name))
-        while True:
+        start_time = time()
+        while time() < start_time + timeout:
             for i in range(len(self.internal_result_queue)):
                 if self.internal_result_queue[i].processed_by == server_name:
                     return_result = copy.deepcopy(self.internal_result_queue[i])
