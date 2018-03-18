@@ -87,6 +87,7 @@ class Dispatcher:
 
             # Tell the client we are ready to receive
             response_result = copy.deepcopy(list_job_results[0])
+            print("response_result = {}".format(response_result))
             response_result.processed_by = None
             self.put_external_result(response_result)
 
@@ -318,6 +319,15 @@ class Dispatcher:
             result = self.get_internal_result()
             if result:
                 results.append(result)
+
+        responded_servers = [result.processed_by for result in results]
+        print("responded_servers = {}".format(responded_servers))
+        for server_name in copy.deepcopy(list(self.server_queues.keys())):
+            if server_name not in responded_servers:
+                print("deleting {}".format(server_name))
+                del self.server_queues[server_name]
+        print("now active servers = {}".format(self.server_queues.keys()))
+
         return results
 
     def get_internal_result_from_server(self, server_name, timeout=4):

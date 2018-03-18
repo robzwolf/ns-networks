@@ -168,6 +168,9 @@ def download_file():
 
     file_name = input("Enter the name of the remote file to download: ")
 
+    if file_name == "":
+        return
+
     t0 = time()
 
     dispatcher.put_job(Job("DWLD", data={"file_name": file_name}))
