@@ -54,6 +54,9 @@ def upload():
         high_reliability = True if hr == "Y" else False
         print("Using high reliability: {}".format(high_reliability))
 
+        if len(file_contents) > 2 * 2**20:
+            print("Warning: This file is large (> 2 MB) and may take a while to upload!")
+
         print("Uploading...")
 
         t0 = time()
@@ -61,7 +64,8 @@ def upload():
         # Send the command and file name
         dispatcher.put_job(Job("UPLD_INIT", data={
             "file_name": file_name,
-            "high_reliability": high_reliability
+            "high_reliability": high_reliability,
+            "file_size": len(file_contents)
         }))
 
         # Check the server is ready to receive
@@ -77,7 +81,8 @@ def upload():
                             token=result.token,
                             data={"file_name": file_name,
                                   "file_contents": file_contents,
-                                  "high_reliability": high_reliability})
+                                  "high_reliability": high_reliability,
+                                  "file_size": len(file_contents)})
         # print("Sending job to dispatcher: {}".format(upld_data_job))
         dispatcher.put_job(upld_data_job)
 

@@ -167,8 +167,11 @@ class Dispatcher:
             self.put_job_in_specific_server_queue(job, server_name)
 
             # Get the result from the server and pass it back to the client
-            result = self.get_internal_result_from_server(server_name)
-            print("Passing back to client result of UPLD_DATA, which was = {}".format(result))
+            print("length of file contents is {}".format(job.data["file_size"]))
+            result = self.get_internal_result_from_server(server_name,
+                                                          timeout=30
+                                                          if job.data["file_size"] > 2 * 2**20 else 4)
+            print("Passing back to client result of UPLD_DATA to server {}, which was = {}".format(server_name, result))
             self.put_external_result(result)
 
     def handle_list(self, job):
@@ -312,6 +315,7 @@ class Dispatcher:
         self.server_queues[server_name].put_job(job)
 
     def get_internal_results_from_all_servers(self, timeout=4):
+        print("timeout is {}".format(timeout))
         start_time = time()
         print("Getting internal results from all servers, start_time={}...".format(round(start_time, 2)))
         results = []
@@ -339,6 +343,7 @@ class Dispatcher:
                     return_result = copy.deepcopy(self.internal_result_queue[i])
                     del self.internal_result_queue[i]
                     return return_result
+        print("get_internal_result_from_server '{}' timed out (timeout was {} seconds)".format(server_name, timeout))
 
     def put_external_result(self, job_result):
         print("Server '{}' put result '{}' in results_queue".format(job_result.processed_by, job_result.result))
