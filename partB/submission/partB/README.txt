@@ -39,3 +39,7 @@ Ensure Python 3.5 or newer and Pyro4 are installed:
 
 Some ideas from:
 https://github.com/irmen/Pyro4/tree/master/examples/distributed-computing, retrieved 05/03/2018.
+
+
+NOTE:
+Unable to test it works on university machines as I do not have the permissions to install Pyro4.
