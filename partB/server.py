@@ -22,19 +22,19 @@ def handle_upload_init(file_name):
     """
     Handles an upload request with just the file name.
     """
+    print("Dispatcher wanted to upload a file: {}".format(file_name))
     return {"outcome": "ready to receive"}
 
 
 def handle_upload_data(file_name, file_contents):
     """
     Handles a full upload request.
-    :return:
     """
     # Write the file contents to disk
     with open(SUBDIR + file_name, "wb") as binary_file:
         binary_file.write(file_contents)
 
-    print("Wrote {} ({:,} bytes) to disk.".format(file_name, len(file_contents)))
+    print("Dispatcher uploaded {} ({:,} bytes).".format(file_name, len(file_contents)))
 
     return {"outcome": "success",
             "file_name": file_name,
@@ -44,8 +44,8 @@ def handle_upload_data(file_name, file_contents):
 def handle_list():
     """
     Lists all the files in all directories.
-    :return:
     """
+    print("Dispatcher requested a list of files.")
     return {"files_list": os.listdir(SUBDIR), "outcome": "success"}
 
 
@@ -53,6 +53,7 @@ def handle_download(file_name):
     """
     Handles a download request.
     """
+    print("Dispatcher requested: {}".format(file_name))
     file_exists = os.path.isfile(SUBDIR + file_name)
     if file_exists:
         # Read the file contents and send them
@@ -60,6 +61,7 @@ def handle_download(file_name):
             with open(SUBDIR + file_name, "rb") as binary_file:
                 # Read the whole file at once
                 file_contents = binary_file.read()
+            print("Returned '{}' ({:,} bytes) to dispatcher.".format(file_name, len(file_contents)))
             return {
                 "file_exists": True,
                 "file_name": file_name,
@@ -74,6 +76,7 @@ def handle_download(file_name):
                 "outcome": "success"
             }
     else:
+        print("Error: File '{}' not found.".format(file_name))
         return {
                 "file_exists": False,
                 "file_name": file_name,
@@ -84,18 +87,15 @@ def handle_download(file_name):
 def handle_delete_init(file_name):
     """
     Check if a file exists.
-    :param file_name:
-    :return:
     """
-    return {"file_exists": os.path.isfile(SUBDIR + file_name)}
+    file_exists = os.path.isfile(SUBDIR + file_name)
+    print("File '{}' exists: {}".format(file_name, file_exists))
+    return {"file_exists": file_exists}
 
 
 def handle_delete_full(file_name, confirmation):
     """
     Delete a file.
-    :param confirmation:
-    :param file_name:
-    :return:
     """
     if confirmation == "Y":
         try:
@@ -111,7 +111,9 @@ def handle_delete_full(file_name, confirmation):
 
 
 def process(job):
-    # Handle the job appropriately, according to its command
+    """
+    Handles a job appropriately, according to its command.
+    """
     print("job.command = {}".format(job.command))
     if job.command == "UPLD_INIT":
         job.result = handle_upload_init(job.data["file_name"])
@@ -128,13 +130,16 @@ def process(job):
         job.result = handle_delete_full(job.data["file_name"],
                                         job.data["confirmation"])
 
-    # print("job.result = {}".format(job.result))
     job.processed_by = SERVER_NAME
     job.data = None
     return job
 
 
 def main():
+    """
+    The main function.
+    """
+
     # Handle server name
     global SERVER_NAME
     if len(sys.argv) < 2:
@@ -164,10 +169,8 @@ def main():
         try:
             # Get this server's queue
             dispatcher_queue = dispatcher.get_server_queue(SERVER_NAME)
-            # print("dispatcher_queue = {}".format(dispatcher_queue))
             job = dispatcher_queue.get_job()
             result = process(job)
-            # print("Putting {} in internal results queue".format(result))
             dispatcher.put_internal_result(result)
         except ValueError:
             print("No job available yet.")

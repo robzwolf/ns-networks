@@ -18,6 +18,9 @@ dispatcher = None
 
 
 def connect():
+    """
+    Connects to the dispatcher.
+    """
     print("Connecting...")
     global dispatcher
     try:
@@ -32,6 +35,9 @@ def connect():
 
 
 def upload():
+    """
+    Handles a file upload.
+    """
     if dispatcher is None:
         print("Error: You are not connected to the server. Use CONN command first.")
         return
@@ -74,8 +80,6 @@ def upload():
             print("Error, server not ready to receive: {}".format(result.result["outcome"]))
             return
 
-        # print("Received result = {}".format(result))
-
         # Send the file contents to the server
         upld_data_job = Job("UPLD_DATA",
                             token=result.token,
@@ -83,7 +87,6 @@ def upload():
                                   "file_contents": file_contents,
                                   "high_reliability": high_reliability,
                                   "file_size": len(file_contents)})
-        # print("Sending job to dispatcher: {}".format(upld_data_job))
         dispatcher.put_job(upld_data_job)
 
         # Get the response from the upload
@@ -103,6 +106,10 @@ def upload():
 
 
 def quit_client():
+    """
+    Quits the client.
+    :return:
+    """
     print("Quitting client...")
     try:
         sys.exit(0)
@@ -111,6 +118,9 @@ def quit_client():
 
 
 def list_files():
+    """
+    Gets a list of available files for download from the dispatcher.
+    """
     if dispatcher is None:
         print("Error: You are not connected to the server. Use CONN command first.")
         return
@@ -129,11 +139,17 @@ def list_files():
 
 
 def delete_file():
+    """
+    Deletes a remote file from all servers.
+    """
     if dispatcher is None:
         print("Error: You are not connected to the server. Use CONN command first.")
         return
 
     file_name = input("Enter the name of the remote file to delete: ")
+
+    if file_name == "":
+        return
 
     dispatcher.put_job(Job("DELF_INIT", data={"file_name": file_name}))
 
@@ -144,7 +160,7 @@ def delete_file():
         return
 
     if not result.result["file_exists"]:
-        print("The file '{}' does not exist on the remote server.".format(file_name))
+        print("The file '{}' does not exist on any remote server.".format(file_name))
         return
 
     confirmation = ""
@@ -165,6 +181,9 @@ def delete_file():
 
 
 def download_file():
+    """
+    Downloads a remote file from the dispatcher.
+    """
     if dispatcher is None:
         print("Error: You are not connected to the server. Use CONN command first.")
         return
@@ -189,7 +208,7 @@ def download_file():
         return
 
     if not result.result["file_exists"]:
-        print("The file '{}' does not exist on the remote server.".format(file_name))
+        print("The file '{}' does not exist on any remote server.".format(file_name))
     else:
         # Write the file contents to disk
         file_contents = base64.b64decode(result.result["file_contents"]["data"])
@@ -200,6 +219,9 @@ def download_file():
 
 
 def menu():
+    """
+    The client-facing command-line menu.
+    """
     print()
     print("#########################################")
     print("   Status: {}\n".format("Connected to server" if dispatcher is not None else "Not connected to server"))
@@ -230,6 +252,9 @@ def menu():
 
 
 def main():
+    """
+    The main function.
+    """
     while True:
         menu()
 
